@@ -1328,6 +1328,6 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
      * @return The address of COMP
      */
     function getCompAddress() public view returns (address) {
-        return 0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68; // INV token
+        return 0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68; // INV Token
     }
 }
