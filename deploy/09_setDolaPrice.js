@@ -2,7 +2,7 @@ module.exports = async ({
     deployments,
     getNamedAccounts,
   }) => {
-    console.log("9. set Dola fixed price")
+    console.log("9. Set Dola fixed price")
     const {execute} = deployments;
     const {deployer} = await getNamedAccounts()
 

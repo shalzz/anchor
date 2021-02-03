@@ -5,11 +5,9 @@ module.exports = async ({
     console.log("14. Add Dola Market")
     const {execute} = deployments;
     const {deployer} = await getNamedAccounts()
-    const Unitroller = await deployments.get('Unitroller');
 
     await execute('Comptroller', {
-        from: deployer,
-        to: Unitroller.address
+        from: deployer
     },
         "_supportMarket",
         (await deployments.get('anDola')).address

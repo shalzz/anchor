@@ -7,8 +7,7 @@ module.exports = async ({
     const {deployer} = await getNamedAccounts()
 
     await execute('Comptroller', {
-        from: deployer,
-        to: (await deployments.get('Unitroller')).address
+        from: deployer
     },
         "_setPriceOracle",
         (await deployments.get('Oracle')).address
