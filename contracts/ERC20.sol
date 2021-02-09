@@ -10,6 +10,7 @@ contract ERC20 {
     uint8 public decimals;
     uint  public totalSupply;
     address public operator;
+    address public pendingOperator;
     mapping(address => uint) public balanceOf;
     mapping(address => mapping(address => uint)) public allowance;
     mapping (address => bool) public minters;
@@ -50,9 +51,15 @@ contract ERC20 {
         );
     }
 
-    function changeOperator(address operator_) public onlyOperator {
-        operator = operator_;
-        emit ChangeOperator(operator_);
+    function setPendingOperator(address newOperator_) public onlyOperator {
+        pendingOperator = newOperator_;
+    }
+
+    function claimOperator() public {
+        require(msg.sender == pendingOperator, "ONLY PENDING OPERATOR");
+        operator = pendingOperator;
+        pendingOperator = address(0);
+        emit ChangeOperator(operator);
     }
 
     function addMinter(address minter_) public onlyOperator {
