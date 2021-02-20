@@ -6,7 +6,7 @@ import "./PriceOracle.sol";
 import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
-import "./Governance/Comp.sol";
+import "./Governance/INV.sol";
 
 /**
  * @title Compound's Comptroller Contract
@@ -1255,7 +1255,7 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
      * @return The amount of COMP which was NOT transferred to the user
      */
     function grantCompInternal(address user, uint amount) internal returns (uint) {
-        Comp comp = Comp(getCompAddress());
+        INV comp = INV(getCompAddress());
         uint compRemaining = comp.balanceOf(address(this));
         if (amount > 0 && amount <= compRemaining) {
             comp.transfer(user, amount);
@@ -1328,6 +1328,6 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
      * @return The address of COMP
      */
     function getCompAddress() public view returns (address) {
-        return 0xc00e94Cb662C3520282E6f5717214004A7f26888;
+        return 0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68; // INV Token
     }
 }
