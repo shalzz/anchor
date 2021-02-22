@@ -7,6 +7,7 @@ interface IStrat {
     function invest() external; // underlying amount must be sent from vault to strat address before
     function divest(uint amount) external; // should send requested amount to vault directly, not less or more
     function calcTotalValue() external returns (uint);
+    function underlying() external view returns (address);
 }
 
 // WARNING: This contract assumes synth and reserve are equally valuable and share the same decimals (e.g. Dola and Dai)
@@ -74,6 +75,7 @@ contract Stabilizer {
     }
 
     function setStrat(IStrat newStrat) public onlyGovernance {
+        require(newStrat.underlying() == address(reserve), "Invalid strat");
         if(address(strat) != address(0)) {
             uint prevTotalValue = strat.calcTotalValue();
             strat.divest(prevTotalValue);
