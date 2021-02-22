@@ -55,12 +55,12 @@ contract Stabilizer {
         operator = operator_;
     }
 
-    function setBuyFee(uint amount) public onlyOperator {
+    function setBuyFee(uint amount) public onlyGovernance {
         require(amount <= MAX_FEE, "amount too high");
         buyFee = amount;
     }
 
-    function setSellFee(uint amount) public onlyOperator {
+    function setSellFee(uint amount) public onlyGovernance {
         require(amount <= MAX_FEE, "amount too high");
         sellFee = amount;
     }
