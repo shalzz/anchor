@@ -118,6 +118,9 @@ contract Stabilizer {
         if(buyFee > 0) {
             uint fee = amount.mul(buyFee).div(MAX_FEE);
             reserve.transferFrom(msg.sender, governance, fee);
+            emit Buy(msg.sender, amount, amount.add(fee));
+        } else {
+            emit Buy(msg.sender, amount, amount);
         }
 
         synth.mint(msg.sender, amount);
@@ -144,6 +147,7 @@ contract Stabilizer {
         
         reserve.transfer(msg.sender, afterFee);
         supply = supply.sub(amount);
+        emit Sell(msg.sender, amount, afterFee);
     }
 
     function rescue(ERC20 token) public onlyGovernance {
@@ -156,4 +160,7 @@ contract Stabilizer {
             bal = bal.add(strat.calcTotalValue());
         }
     }
+
+    event Buy(address indexed user, uint purchased, uint spent);
+    event Sell(address indexed user, uint sold, uint received);
 }
