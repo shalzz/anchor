@@ -151,6 +151,7 @@ contract Stabilizer {
     }
 
     function rescue(ERC20 token) public onlyGovernance {
+        require(token != reserve, "RESERVE CANNOT BE RESCUED");
         token.transfer(governance, token.balanceOf(address(this)));
     }
 
