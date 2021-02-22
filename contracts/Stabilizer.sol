@@ -50,6 +50,7 @@ contract Stabilizer {
 
     function setOperator(address operator_) public {
         require(msg.sender == governance || msg.sender == operator, "ONLY GOV OR OPERATOR");
+        require(operator_ != address(0), "NO ADDRESS ZERO");
         operator = operator_;
     }
 
@@ -68,6 +69,7 @@ contract Stabilizer {
     }
 
     function setGovernance(address gov_) public onlyGovernance {
+        require(gov_ != address(0), "NO ADDRESS ZERO");
         governance = gov_;
     }
 
