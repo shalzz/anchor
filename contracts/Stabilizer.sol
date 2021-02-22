@@ -16,7 +16,8 @@ interface IStrat {
 contract Stabilizer {
     using SafeMath for uint;
 
-    uint public constant MAX_FEE = 10000;
+    uint public constant MAX_FEE = 1000; // 10%
+    uint public constant FEE_DENOMINATOR = 10000;
     uint public buyFee;
     uint public sellFee;
     uint public supplyCap;
@@ -116,7 +117,7 @@ contract Stabilizer {
         }
 
         if(buyFee > 0) {
-            uint fee = amount.mul(buyFee).div(MAX_FEE);
+            uint fee = amount.mul(buyFee).div(FEE_DENOMINATOR);
             reserve.transferFrom(msg.sender, governance, fee);
             emit Buy(msg.sender, amount, amount.add(fee));
         } else {
@@ -138,7 +139,7 @@ contract Stabilizer {
 
         uint afterFee;
         if(sellFee > 0) {
-            uint fee = amount.mul(sellFee).div(MAX_FEE);
+            uint fee = amount.mul(sellFee).div(FEE_DENOMINATOR);
             afterFee = amount.sub(fee);
             reserve.transfer(governance, fee);
         } else {
