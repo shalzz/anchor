@@ -107,6 +107,7 @@ contract Stabilizer {
     }
 
     function buy(uint amount) public {
+        require(supply.add(amount) <= supplyCap, "supply exceeded cap");
         if(address(strat) != address(0)) {
             reserve.transferFrom(msg.sender, address(strat), amount);
             strat.invest();
@@ -121,7 +122,6 @@ contract Stabilizer {
 
         synth.mint(msg.sender, amount);
         supply = supply.add(amount);
-        require(supply <= supplyCap, "supply exceeded cap");
     }
 
     function sell(uint amount) public {
