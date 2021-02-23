@@ -1,0 +1,17 @@
+{
+  "0x055aad2bc0b02aca57ace0784463766f2178a0781e1a5fe9d28776b7acee80ca": {
+    "decoded": {
+      "from": "0x5656ab2fAe8522b8148478528DDa4ff89075f6E7",
+      "gasPrice": "10000000000",
+      "gasLimit": "95596",
+      "to": "0xB012964d9FCB2dE8D9FDe90ea232d43e9934A4B0",
+      "value": "0",
+      "nonce": 455,
+      "data": "0xa76b3fda0000000000000000000000007ddaabe73e48feae7ae28245609ce26580df4130",
+      "r": "0x15f6fc6a1226dd2eb70bad280381c635b463d39a153c8a604be111961f23015b",
+      "s": "0x021861808db29ad88c333e96d4760bd92c9e14c8f352def97c87ec4a9fdbc867",
+      "v": 44,
+      "chainId": 4
+    }
+  }
+}

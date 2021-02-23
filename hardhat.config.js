@@ -25,7 +25,11 @@ module.exports = {
     rinkeby:{
       url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
       accounts: [process.env.RINKEBY_PRIVKEY]
-    }
+    },
+    mainnet:{
+      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
+      accounts: [process.env.MAINNET_PRIVKEY]
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
