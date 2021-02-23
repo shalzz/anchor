@@ -8,7 +8,7 @@ module.exports = async ({
     const Dola = await deployments.get('Dola');
     const Unitroller = await deployments.get('Unitroller');
     const Model = await deployments.get('DolaInterestRateModel');
-    const {gov, deployer} = await getNamedAccounts();
+    const {deployer} = await getNamedAccounts();
 
     await deploy('CErc20Immutable', {
       from: deployer,
@@ -20,7 +20,7 @@ module.exports = async ({
         "Anchor Dola",
         "anDola",
         "8",
-        gov
+        deployer
       ]
     });
 

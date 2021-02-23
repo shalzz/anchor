@@ -4,7 +4,7 @@ module.exports = async ({
   }) => {
     console.log("11. Deploy anETH")
     const {deploy, save} = deployments;
-    const {deployer, gov} = await getNamedAccounts()
+    const {deployer} = await getNamedAccounts()
 
     const Unitroller = await deployments.get('Unitroller');
     const Model = await deployments.get('EthInterestRateModel');
@@ -18,7 +18,7 @@ module.exports = async ({
         "Anchor Ether",
         "anETH",
         "8",
-        gov
+        deployer
       ]
     });
 

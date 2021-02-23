@@ -4,13 +4,13 @@ module.exports = async ({
   }) => {
     console.log("17. Deploy Fed")
     const {deploy} = deployments;
-    const {deployer, gov} = await getNamedAccounts();
+    const {deployer} = await getNamedAccounts();
 
     await deploy('Fed', {
       from: deployer,
       args:[
         (await deployments.get('anDola')).address,
-        gov
+        deployer
       ]
     });
   };

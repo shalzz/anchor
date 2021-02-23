@@ -2,7 +2,7 @@ module.exports = async ({
     deployments,
     getNamedAccounts,
   }) => {
-    console.log("20. Set AnETH Collateral Factor to 50%")
+    console.log("19. Set AnETH Collateral Factor to 50%")
     const {execute} = deployments;
     const {deployer} = await getNamedAccounts()
 
