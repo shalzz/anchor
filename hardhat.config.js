@@ -31,12 +31,16 @@ module.exports = {
     apiKey: process.env.ETHERSCAN_API_KEY
   },
   namedAccounts: {
+    dai: {
+      1:"0x6b175474e89094c44da98b954eedeac495271d0f",
+      4:"0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735"
+    },
     ethFeed:{
       1:"0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
       4:"0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
     },
     gov:{
-      1:0, // TODO: set to gov Timelock later -> "0x926dF14a23BE491164dCF93f4c468A50ef659D5B"
+      1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
       4:0
     },
     deployer:{
