@@ -4,16 +4,16 @@ module.exports = async ({
   }) => {
     console.log("7. Deploy Dola Interest Rate Model")
     const {deploy, save} = deployments;
-    const {deployer} = await getNamedAccounts()
+    const {deployer, gov} = await getNamedAccounts()
 
     await deploy('JumpRateModelV2', {
       from: deployer,
       args:[
           "0",
           "40000000000000000",
-          "1090000000000000000",
-          "800000000000000000",
-          deployer
+          "1500000000000000000",
+          "750000000000000000",
+          gov
       ]
     });
 
