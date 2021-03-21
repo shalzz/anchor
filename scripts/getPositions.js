@@ -1,14 +1,18 @@
 const hre = require('hardhat');
 const {deployments, ethers} = hre;
+const Multicall  = require('@0xsequence/multicall')
 const Table = require('cli-table');
 
 (async () => {
+    try {
     const comptrollerDeployment = await deployments.get("Comptroller")
-    const comptroller = new ethers.Contract(comptrollerDeployment.address, comptrollerDeployment.abi, ethers.provider)
+    const provider = new Multicall.providers.MulticallProvider(ethers.provider, {batchSize:1000000})
+    const comptroller = new ethers.Contract(comptrollerDeployment.address, comptrollerDeployment.abi, provider)
     const filter = comptroller.filters.MarketEntered();
     const logs = await comptroller.queryFilter(filter, 0, "latest");
     let accounts = [...new Set(logs.map(v=>v.args.account))]
-    const accountsLiquidity = await Promise.all(accounts.map(v => comptroller.getAccountLiquidity(v)))
+    const promises = accounts.map(v => comptroller.getAccountLiquidity(v))
+    const accountsLiquidity = await Promise.all(promises)
     var positionTable = new Table({
         head: ['Address', 'Liquidity', 'Shortfall', 'Liquidatable']
     });
@@ -29,5 +33,7 @@ const Table = require('cli-table');
 
     console.log("Liquidatable:")
     console.log(liquidatableTable.toString());
-
+    } catch(e) {
+        console.error(e)
+    }
 })();
