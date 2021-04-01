@@ -43,6 +43,12 @@ module.exports = {
       1:"0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
       4:"0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
     },
+    yfi: {
+      1:"0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
+    },
+    delegateRegistry: {
+      1:"0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
+    },
     gov:{
       1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
       4:0
