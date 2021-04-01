@@ -43,6 +43,12 @@ module.exports = {
       1:"0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
       4:"0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
     },
+    sushiFeed:{
+      1:"0xe572CeF69f43c2E488b33924AF04BDacE19079cf"
+    },
+    sushiExchangeRate:{
+      1:"0x851a040fC0Dcbb13a272EBC272F2bC2Ce1e11C4d"
+    },
     gov:{
       1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
       4:0
