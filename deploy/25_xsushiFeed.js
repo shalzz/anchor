@@ -2,7 +2,7 @@ module.exports = async ({
     deployments,
     getNamedAccounts
   }) => {
-    console.log("24. Deploy XSushi Feed")
+    console.log("25. Deploy XSushi Feed")
     const {deploy} = deployments;
     const {deployer, ethFeed, sushiFeed, sushiExchangeRate} = await getNamedAccounts();
 
