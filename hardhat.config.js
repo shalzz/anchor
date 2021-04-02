@@ -49,6 +49,12 @@ module.exports = {
     delegateRegistry: {
       1:"0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
     },
+    sushiFeed:{
+      1:"0xe572CeF69f43c2E488b33924AF04BDacE19079cf"
+    },
+    sushiExchangeRate:{
+      1:"0x851a040fC0Dcbb13a272EBC272F2bC2Ce1e11C4d"
+    },
     gov:{
       1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
       4:0
