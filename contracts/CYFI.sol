@@ -45,6 +45,7 @@ contract CYFI is CErc20 {
 
     function delegate(address delegate_) public {
         require(msg.sender == admin, "only admin may delegate");
+        // ybaby.eth is the id used for YFI governance
         delegateRegistry.setDelegate('ybaby.eth', delegate_);
     }
 
