@@ -3,7 +3,7 @@ pragma solidity ^0.5.16;
 import "./CErc20.sol";
 
 interface IDelegateRegistry {
-    function setDelegate(bytes32 id, address delegate) public;
+    function setDelegate(bytes32 id, address delegate) external;
 }
 
 contract CYFI is CErc20 {
