@@ -14,6 +14,7 @@ module.exports = async ({
     const name = prompt('Market name: ');
     const symbol = prompt('Market symbol: ');
     const underlyingAddress = prompt('Underlying token address: ');
+    const exchangeRate = prompt('Initial exchange rate: ');
 
     await deploy('CErc20Immutable', {
       from: deployer,
@@ -21,7 +22,7 @@ module.exports = async ({
         underlyingAddress,
         Unitroller.address,
         Model.address,
-        "200000000000000000000000000",
+        exchangeRate,
         name,
         symbol,
         "8",
