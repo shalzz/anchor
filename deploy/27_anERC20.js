@@ -32,5 +32,4 @@ module.exports = async ({
     await save(name, market);
   };
 
-module.exports.dependencies = ['DolaInterestRateModel', 'Unitroller'];
 module.exports.tags = ['anERC20'];
