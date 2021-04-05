@@ -6,6 +6,7 @@ import "./ErrorReporter.sol";
 import "./Exponential.sol";
 import "./EIP20Interface.sol";
 import "./EIP20NonStandardInterface.sol";
+import "./SafeMath.sol";
 
 /**
  * @title Compound's CToken Contract
@@ -356,9 +357,9 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
      * @param redeemTokens The number of cTokens to redeem into underlying
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
-    function redeemInternal(uint redeemTokens) internal nonReentrant returns (uint) {
+    function redeemInternal(uint redeemTokens, bool useEscrow) internal nonReentrant returns (uint) {
         // redeemFresh emits redeem-specific logs on errors, so we don't need to
-        return redeemFresh(msg.sender, redeemTokens, 0);
+        return redeemFresh(msg.sender, redeemTokens, 0, useEscrow);
     }
 
     /**
@@ -366,9 +367,9 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
      * @param redeemAmount The amount of underlying to receive from redeeming cTokens
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
-    function redeemUnderlyingInternal(uint redeemAmount) internal nonReentrant returns (uint) {
+    function redeemUnderlyingInternal(uint redeemAmount, bool useEscrow) internal nonReentrant returns (uint) {
         // redeemFresh emits redeem-specific logs on errors, so we don't need to
-        return redeemFresh(msg.sender, 0, redeemAmount);
+        return redeemFresh(msg.sender, 0, redeemAmount, useEscrow);
     }
 
     struct RedeemLocalVars {
@@ -388,7 +389,7 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
      * @param redeemAmountIn The number of underlying tokens to receive from redeeming cTokens (only one of redeemTokensIn or redeemAmountIn may be non-zero)
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
-    function redeemFresh(address payable redeemer, uint redeemTokensIn, uint redeemAmountIn) internal returns (uint) {
+    function redeemFresh(address payable redeemer, uint redeemTokensIn, uint redeemAmountIn, bool useEscrow) internal returns (uint) {
         require(redeemTokensIn == 0 || redeemAmountIn == 0, "one of redeemTokensIn or redeemAmountIn must be zero");
 
         RedeemLocalVars memory vars;
@@ -463,7 +464,7 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
          *  On success, the cToken has redeemAmount less of cash.
          *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
          */
-        doTransferOut(redeemer, vars.redeemAmount);
+        doTransferOut(redeemer, vars.redeemAmount, useEscrow);
 
         /* We write previously calculated values into storage */
         totalSupply = vars.totalSupplyNew;
@@ -648,7 +649,7 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
      *  If caller has not called checked protocol's balance, may revert due to insufficient cash held in the contract.
      *  If caller has checked protocol's balance, and verified it is >= amount, this should not revert in normal conditions.
      */
-    function doTransferOut(address payable to, uint amount) internal;
+    function doTransferOut(address payable to, uint amount, bool useEscrow) internal;
 
 
     /*** Reentrancy Guard ***/
@@ -664,12 +665,86 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
     }
 }
 
+contract TimelockEscrow {
+    using SafeMath for uint;
+
+    address public underlying;
+    address public governance;
+    address public market;
+    uint public duration = 14 days;
+    mapping (address => EscrowData) public pendingWithdrawals;
+
+    struct EscrowData {
+        uint timestamp;
+        uint amount;
+    }
+
+    constructor(address underlying_, address governance_) public {
+        underlying = underlying_;
+        governance = governance_;
+        market = msg.sender;
+    }
+
+    // set to 0 to send funds directly to users
+    function _setEscrowDuration(uint duration_) public {
+        require(msg.sender == governance, "only governance can set escrow duration");
+        duration = duration_;
+    }
+
+    function _setGov(address governance_) public {
+        require(msg.sender == governance, "only governance can set its new address");
+        governance = governance_;
+    }
+
+    /**
+     * @notice assumes funds were already sent to this contract by the market. Resets escrow timelock on each withdrawal
+     */
+    function escrow(address user, uint amount) public {
+        require(msg.sender == market, "only market can escrow");
+        if(duration > 0) {
+            EscrowData memory withdrawal = pendingWithdrawals[user];
+            pendingWithdrawals[user] = EscrowData({
+                timestamp: block.timestamp,
+                amount: withdrawal.amount.add(amount)
+            });
+            emit Escrow(user, block.timestamp, amount);
+        } else { // if duration is 0, we send the funds directly to the user
+            EIP20Interface token = EIP20Interface(underlying);
+            token.transfer(user, amount);
+        }
+    }
+
+    /**
+     * @notice returns user withdrawable amount
+     */
+    function withdrawable(address user) public view returns (uint amount) {
+        EscrowData memory withdrawal = pendingWithdrawals[user];
+        if(withdrawal.timestamp + duration > block.timestamp) {
+            amount = withdrawal.amount;
+        }
+    }
+
+    function withdraw() public {
+        uint amount = withdrawable(msg.sender);
+        require(amount > 0, "Nothing to withdraw");
+        EIP20Interface token = EIP20Interface(underlying);
+        token.transfer(msg.sender, amount);
+        delete pendingWithdrawals[msg.sender];
+        emit Withdraw(msg.sender, amount);
+    }
+
+    event Escrow(address to, uint timestamp, uint amount);
+    event Withdraw(address to, uint amount);
+}
+
 /**
  * @title Compound's CErc20 Contract
  * @notice CTokens which wrap an EIP-20 underlying
  * @author Compound
  */
 contract XINV is xInvCore, CErc20Interface {
+
+    TimelockEscrow public escrow;
 
     /**
      * @notice Construct the xINV market
@@ -700,6 +775,9 @@ contract XINV is xInvCore, CErc20Interface {
 
         // Set the proper admin now that initialization is done
         admin = admin_;
+
+        // Create escrow contract
+        escrow = new TimelockEscrow(underlying_, admin_);
     }
 
     /*** User Interface ***/
@@ -720,7 +798,7 @@ contract XINV is xInvCore, CErc20Interface {
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
     function redeem(uint redeemTokens) external returns (uint) {
-        return redeemInternal(redeemTokens);
+        return redeemInternal(redeemTokens, true);
     }
 
     /**
@@ -729,7 +807,7 @@ contract XINV is xInvCore, CErc20Interface {
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
     function redeemUnderlying(uint redeemAmount) external returns (uint) {
-        return redeemUnderlyingInternal(redeemAmount);
+        return redeemUnderlyingInternal(redeemAmount, true);
     }
 
     /*** Safe Token ***/
@@ -789,9 +867,13 @@ contract XINV is xInvCore, CErc20Interface {
      *      Note: This wrapper safely handles non-standard ERC-20 tokens that do not return a value.
      *            See here: https://medium.com/coinmonks/missing-return-value-bug-at-least-130-tokens-affected-d67bf08521ca
      */
-    function doTransferOut(address payable to, uint amount) internal {
+    function doTransferOut(address payable to, uint amount, bool useEscrow) internal {
         EIP20NonStandardInterface token = EIP20NonStandardInterface(underlying);
-        token.transfer(to, amount);
+        if(useEscrow) {
+            token.transfer(address(escrow), amount);
+        } else {
+            token.transfer(to, amount);
+        }
 
         bool success;
         assembly {
@@ -808,5 +890,8 @@ contract XINV is xInvCore, CErc20Interface {
                 }
         }
         require(success, "TOKEN_TRANSFER_OUT_FAILED");
+        if(useEscrow) {
+            escrow.escrow(to, amount);
+        }
     }
 }
