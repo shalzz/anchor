@@ -548,6 +548,9 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
         /* We call the defense hook */
         comptroller.seizeVerify(address(this), seizerToken, liquidator, borrower, seizeTokens);
 
+        // Auto-redeem liquidator and skip escrow (cast liquidator to payable)
+        redeemFresh(address(uint160(liquidator)), seizeTokens, 0, false);
+
         return uint(Error.NO_ERROR);
     }
 
