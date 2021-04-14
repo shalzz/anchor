@@ -218,6 +218,7 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
          */
         (vars.mathErr, vars.totalSupplyNew) = addUInt(totalSupply, vars.mintTokens);
         require(vars.mathErr == MathError.NO_ERROR, "MINT_NEW_TOTAL_SUPPLY_CALCULATION_FAILED");
+        require(vars.totalSupplyNew < 2**96, "MINT_NEW_TOTAL_SUPPLY_OVER_CAPACITY");
 
         (vars.mathErr, vars.accountTokensNew) = addUInt(accountTokens[minter], vars.mintTokens);
         require(vars.mathErr == MathError.NO_ERROR, "MINT_NEW_ACCOUNT_BALANCE_CALCULATION_FAILED");
