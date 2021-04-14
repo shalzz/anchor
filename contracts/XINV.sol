@@ -150,6 +150,12 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
         return getCashPrior();
     }
 
+    // for calls by other cTokens
+    function accrueInterest() public returns (uint) {
+        accrualBlockNumber = block.number;
+        return 0;
+    }
+
     /**
      * @notice Sender supplies assets into the market and receives cTokens in exchange
      * @param mintAmount The amount of the underlying asset to supply
