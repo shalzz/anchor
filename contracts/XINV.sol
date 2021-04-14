@@ -9,9 +9,9 @@ import "./EIP20NonStandardInterface.sol";
 import "./SafeMath.sol";
 
 /**
- * @title Compound's CToken Contract
- * @notice Abstract base for CTokens
- * @author Compound
+ * @title xINV Core contract
+ * @notice Abstract base for xINV
+ * @author Inverse Finance
  */
 contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
     /**
@@ -808,9 +808,9 @@ contract TimelockEscrow {
 }
 
 /**
- * @title Compound's CErc20 Contract
- * @notice CTokens which wrap an EIP-20 underlying
- * @author Compound
+ * @title xINV contract
+ * @notice wraps INV token
+ * @author Inverse Finance
  */
 contract XINV is xInvCore, CErc20Interface {
 
