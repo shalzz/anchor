@@ -26,7 +26,7 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
                         uint initialExchangeRateMantissa_,
                         string memory name_,
                         string memory symbol_,
-                        uint8 decimals_) public {
+                        uint8 decimals_) internal {
         require(msg.sender == admin, "only admin may initialize the market");
 
         // Set initial exchange rate
