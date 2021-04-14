@@ -7,6 +7,7 @@ import "./Exponential.sol";
 import "./EIP20Interface.sol";
 import "./EIP20NonStandardInterface.sol";
 import "./SafeMath.sol";
+import "./Governance/INV.sol";
 
 /**
  * @title xINV Core contract
@@ -858,6 +859,14 @@ contract XINV is xInvCore, CErc20Interface {
      */
     function mint(uint mintAmount) external returns (uint) {
         (uint err,) = mintInternal(mintAmount);
+        
+        /* if user has no delegate, we inherit delegate from INV */
+        if(delegates[msg.sender] == address(0)) {
+            address invDelegate = INV(underlying).delegates(msg.sender);
+            if(invDelegate != address(0)) {
+                _delegate(msg.sender, invDelegate);
+            }
+        }
         return err;
     }
 
