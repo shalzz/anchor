@@ -798,8 +798,8 @@ contract TimelockEscrow {
         uint amount = withdrawable(msg.sender);
         require(amount > 0, "Nothing to withdraw");
         EIP20Interface token = EIP20Interface(underlying);
-        token.transfer(msg.sender, amount);
         delete pendingWithdrawals[msg.sender];
+        token.transfer(msg.sender, amount);
         emit Withdraw(msg.sender, amount);
     }
 
