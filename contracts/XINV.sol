@@ -435,7 +435,7 @@ contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
         /* Emit a Transfer event */
         emit Transfer(borrower, liquidator, seizeTokens);
 
-        /* We move delegates */
+        /* We move delegates to liquidator although they'll be burned in the redeemFresh call after */
         _moveDelegates(borrower, liquidator, uint96(seizeTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
