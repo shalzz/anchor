@@ -21,7 +21,13 @@ module.exports = {
       }
     }
   },
+  defaultNetwork: "hardhat",
   networks:{
+    hardhat: {
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`
+      }
+    },
     rinkeby:{
       url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
       accounts: [process.env.RINKEBY_PRIVKEY]
@@ -37,27 +43,34 @@ module.exports = {
   namedAccounts: {
     dai: {
       1:"0x6b175474e89094c44da98b954eedeac495271d0f",
-      4:"0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735"
+      4:"0xc7AD46e0b8a400Bb3C915120d284AafbA8fc4735",
+      "hardhat": 4
     },
     ethFeed:{
       1:"0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-      4:"0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
+      4:"0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
+      "hardhat": 5
     },
     yfi: {
-      1:"0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e"
+      1:"0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e",
+      "hardhat": 6
     },
     delegateRegistry: {
-      1:"0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446"
+      1:"0x469788fE6E9E9681C6ebF3bF78e7Fd26Fc015446",
+      "hardhat": 7
     },
     sushiFeed:{
-      1:"0xe572CeF69f43c2E488b33924AF04BDacE19079cf"
+      1:"0xe572CeF69f43c2E488b33924AF04BDacE19079cf",
+      "hardhat": 8
     },
     sushiExchangeRate:{
-      1:"0x851a040fC0Dcbb13a272EBC272F2bC2Ce1e11C4d"
+      1:"0x851a040fC0Dcbb13a272EBC272F2bC2Ce1e11C4d",
+      "hardhat": 9
     },
     gov:{
       1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
-      4:0
+      4:0,
+      "hardhat": 1
     },
     deployer:{
       default:0
