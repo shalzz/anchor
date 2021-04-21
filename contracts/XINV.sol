@@ -1,7 +1,6 @@
 pragma solidity ^0.5.16;
 
 import "./ComptrollerInterface.sol";
-import "./CTokenInterfaces.sol";
 import "./ErrorReporter.sol";
 import "./Exponential.sol";
 import "./EIP20Interface.sol";
@@ -14,7 +13,112 @@ import "./Governance/INV.sol";
  * @notice Abstract base for xINV
  * @author Inverse Finance
  */
-contract xInvCore is CTokenInterface, Exponential, TokenErrorReporter {
+contract xInvCore is Exponential, TokenErrorReporter {
+
+    /**
+     * @dev Guard variable for re-entrancy checks
+     */
+    bool internal _notEntered;
+
+    /**
+     * @notice EIP-20 token name for this token
+     */
+    string public name;
+
+    /**
+     * @notice EIP-20 token symbol for this token
+     */
+    string public symbol;
+
+    /**
+     * @notice EIP-20 token decimals for this token
+     */
+    uint8 public decimals;
+
+    /**
+     * @notice Maximum fraction of interest that can be set aside for reserves
+     */
+    uint internal constant reserveFactorMaxMantissa = 1e18;
+
+    /**
+     * @notice Administrator for this contract
+     */
+    address payable public admin;
+
+    /**
+     * @notice Pending administrator for this contract
+     */
+    address payable public pendingAdmin;
+
+    /**
+     * @notice Contract which oversees inter-cToken operations
+     */
+    ComptrollerInterface public comptroller;
+
+    /**
+     * @notice Initial exchange rate used when minting the first CTokens (used when totalSupply = 0)
+     */
+    uint internal initialExchangeRateMantissa;
+
+    /**
+     * @notice Block number that interest was last accrued at
+     */
+    uint public accrualBlockNumber;
+
+    /**
+     * @notice Total number of tokens in circulation
+     */
+    uint public totalSupply;
+
+    /**
+     * @notice Official record of token balances for each account
+     */
+    mapping (address => uint) internal accountTokens;
+
+    /**
+     * @notice Indicator that this is a CToken contract (for inspection)
+     */
+    bool public constant isCToken = true;
+
+    /*** Market Events ***/
+
+    /**
+     * @notice Event emitted when tokens are minted
+     */
+    event Mint(address minter, uint mintAmount, uint mintTokens);
+
+    /**
+     * @notice Event emitted when tokens are redeemed
+     */
+    event Redeem(address redeemer, uint redeemAmount, uint redeemTokens);
+
+    /*** Admin Events ***/
+
+    /**
+     * @notice Event emitted when pendingAdmin is changed
+     */
+    event NewPendingAdmin(address oldPendingAdmin, address newPendingAdmin);
+
+    /**
+     * @notice Event emitted when pendingAdmin is accepted, which means admin is updated
+     */
+    event NewAdmin(address oldAdmin, address newAdmin);
+
+    /**
+     * @notice Event emitted when comptroller is changed
+     */
+    event NewComptroller(ComptrollerInterface oldComptroller, ComptrollerInterface newComptroller);
+
+    /**
+     * @notice EIP20 Transfer event
+     */
+    event Transfer(address indexed from, address indexed to, uint amount);
+
+    /**
+     * @notice Failure event
+     */
+    event Failure(uint error, uint info, uint detail);
+
     /**
      * @notice Initialize the money market
      * @param comptroller_ The address of the Comptroller
@@ -820,8 +924,9 @@ contract TimelockEscrow {
  * @notice wraps INV token
  * @author Inverse Finance
  */
-contract XINV is xInvCore, CErc20Interface {
+contract XINV is xInvCore {
 
+    address public underlying;
     TimelockEscrow public escrow;
 
     /**
