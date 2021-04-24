@@ -857,7 +857,7 @@ contract TimelockEscrow {
     mapping (address => EscrowData) public pendingWithdrawals;
 
     struct EscrowData {
-        uint timestamp;
+        uint withdrawalTimestamp;
         uint amount;
     }
 
@@ -886,10 +886,11 @@ contract TimelockEscrow {
         if(duration > 0) {
             EscrowData memory withdrawal = pendingWithdrawals[user];
             pendingWithdrawals[user] = EscrowData({
-                timestamp: block.timestamp,
+                // we set the future withdrawal timestamp based on current `duration` to avoid applying future `duration` changes to existing withdrawals in the event of a governance attack
+                withdrawalTimestamp: block.timestamp + duration,
                 amount: withdrawal.amount.add(amount)
             });
-            emit Escrow(user, block.timestamp, amount);
+            emit Escrow(user, block.timestamp + duration, amount);
         } else { // if duration is 0, we send the funds directly to the user
             EIP20Interface token = EIP20Interface(underlying);
             token.transfer(user, amount);
@@ -901,7 +902,7 @@ contract TimelockEscrow {
      */
     function withdrawable(address user) public view returns (uint amount) {
         EscrowData memory withdrawal = pendingWithdrawals[user];
-        if(withdrawal.timestamp + duration > block.timestamp) {
+        if(withdrawal.withdrawalTimestamp > block.timestamp) {
             amount = withdrawal.amount;
         }
     }
@@ -915,7 +916,7 @@ contract TimelockEscrow {
         emit Withdraw(msg.sender, amount);
     }
 
-    event Escrow(address to, uint timestamp, uint amount);
+    event Escrow(address to, uint withdrawalTimestamp, uint amount);
     event Withdraw(address to, uint amount);
 }
 
