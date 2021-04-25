@@ -60,6 +60,10 @@ describe("Test", () => {
         await inv.connect(wallets.deployer).openTheGates();
     });
     
+    const toMint1 = hre.ethers.utils.parseEther("1");
+    const toMint2 = hre.ethers.utils.parseEther("2");
+    const toMint3 = hre.ethers.utils.parseEther("3");
+    const toRedeem1 = hre.ethers.utils.parseEther("1");
     const supportMarket = async (market_, unitroller_) => {
         // Get the proxied interface by retrieving the Comptroller contract
         // at Unitroller's address.
@@ -126,10 +130,145 @@ describe("Test", () => {
     const evmIncreaseTime = async (duration_) => { 
         return await hre.network.provider.send("evm_increaseTime", [ duration_ ]);
     }
+
+    const evmSetNextBlockTimestamp = async (timestamp_) => {
+        return await hre.network.provider.send("evm_setNextBlockTimestamp", [ timestamp_ ]);
+    } 
     
     const delegate = async (token_, signer_, delegate_) => {
         return await token_.connect(signer_).delegate(delegate_)
     }
+
+    describe('comptroller', function() {
+
+        beforeEach( async () => {
+            await supportMarket(xINV.address, unitroller.address);
+        });
+
+        it('should only allow admin to set comptroller', async () => {
+            const nonAdmin = wallets.delegate;
+            const signers = await hre.ethers.getSigners()
+            let newComptroller = signers[3];
+
+            await xINV.connect(nonAdmin)._setComptroller(newComptroller.address);
+            expect(await xINV.comptroller()).to.equal(unitroller.address);
+
+            // fail if not real comptroller contract
+            await expect(xINV.connect(wallets.deployer)._setComptroller(newComptroller.address)).to.be.reverted;
+            expect(await xINV.comptroller()).to.equal(unitroller.address);
+
+            newComptroller = await hre.waffle.deployContract(wallets.deployer, ComptrollerArtifact, []);
+            await xINV.connect(wallets.deployer)._setComptroller(newComptroller.address);
+            expect(await xINV.comptroller()).to.equal(newComptroller.address);
+        });
+    });
+
+    describe('admin', function() {
+
+        beforeEach( async () => {
+            await supportMarket(xINV.address, unitroller.address);
+        });
+
+        it('should return correct admin', async () => {
+            expect(await xINV.admin()).to.equal(wallets.deployer.address);
+        });
+
+        it('should return correct pending admin', async () => {
+            expect(await xINV.pendingAdmin()).to.equal(await address(0));
+        });
+
+        it('sets new admin', async () => {
+            await xINV.connect(wallets.admin)._setPendingAdmin(wallets.admin.address)
+            expect(await xINV.admin()).to.equal(wallets.deployer.address);
+
+            // current admin sets pending admin
+            await xINV.connect(wallets.deployer)._setPendingAdmin(wallets.delegate.address);
+            await xINV.connect(wallets.deployer)._setPendingAdmin(wallets.admin.address);
+            expect(await xINV.pendingAdmin()).to.equal(wallets.admin.address);
+
+            // accept admin
+            // first attempt fail from wrong pending admin
+            await xINV.connect(wallets.delegate)._acceptAdmin();
+            expect(await xINV.pendingAdmin()).to.equal(wallets.admin.address);
+
+            // actual pending admin accepting
+            await xINV.connect(wallets.admin)._acceptAdmin();
+            expect(await xINV.pendingAdmin()).to.equal(await address(0));
+            expect(await xINV.admin()).to.equal(wallets.admin.address);     
+        });
+    });
+
+    describe('timelock escrow', function () {
+
+        beforeEach( async () => {
+            await supportMarket(xINV.address, unitroller.address);
+        });
+
+        it('sets governance, underlying and market on init', async () => {
+            expect(await timelockEscrow.underlying()).to.equal(inv.address);
+            expect(await timelockEscrow.governance()).to.equal(wallets.deployer.address);
+            expect(await timelockEscrow.market()).to.equal(xINV.address);
+        });
+
+        it('only allows governance to set escrow duration', async () => {
+            const nonGov = wallets.delegate;
+            await expect(timelockEscrow.connect(nonGov)._setEscrowDuration(1e6))
+                .to.revertedWith("revert only governance can set escrow duration");
+            
+            await timelockEscrow.connect(wallets.deployer)._setEscrowDuration(1e6);
+            expect(await timelockEscrow.duration()).to.equal(1e6);
+        });
+
+        it('only allows governance to set another governance', async () => {
+            const nonGov = wallets.delegate;
+            await expect(timelockEscrow.connect(nonGov)._setGov(wallets.admin.address))
+                .to.revertedWith("revert only governance can set its new address");
+            
+            await timelockEscrow.connect(wallets.deployer)._setGov(wallets.admin.address);
+            expect(await timelockEscrow.governance()).to.equal(wallets.admin.address); 
+        });
+
+        it('accepts pending withdrawals', async () => {
+            // approve  and mint
+            await batchMint([ wallets.deployer ], hre.ethers.utils.parseEther("5"));
+
+            // redeem cToken aka xINV for underlying and check balances of both xINV and INV
+            await redeem(xINV, wallets.deployer, toRedeem1);
+
+            const escrowPendingWithdrawal = (await timelockEscrow.pendingWithdrawals(wallets.deployer.address))["amount"];
+            expect(escrowPendingWithdrawal).to.equal(toRedeem1);
+        });
+
+        it('transfers withdrawable directly to redeemer if duration is 0', async () => {
+            // approve  and mint
+            await batchMint([ wallets.deployer ], hre.ethers.utils.parseEther("5"));
+
+            // send redeemer directly their withdrawable
+            await timelockEscrow.connect(wallets.deployer)._setEscrowDuration(0);
+            expect(await timelockEscrow.duration()).to.equal(0);
+
+            // redeem cToken aka xINV for underlying
+            const balanceBefore = await balanceOf(inv, wallets.deployer.address);
+            await redeem(xINV, wallets.deployer, toRedeem1);
+            expect(await balanceOf(inv, wallets.deployer.address)).to.equal(balanceBefore.add(toRedeem1));
+        });
+
+        it('fails withdrawal if withdrawal timestamp < current block timestamp', async () => {
+            // approve  and mint
+            await batchMint([ wallets.deployer ], hre.ethers.utils.parseEther("5"));
+
+            // redeem and check funds are SAFU in escrow
+            await redeem(xINV, wallets.deployer, toRedeem1);
+            expect((await timelockEscrow.pendingWithdrawals(wallets.deployer.address))["amount"]).to.equal(toRedeem1);
+
+            // fast forward to time below withdrawal timestamp
+            const timestamp = (await timelockEscrow.pendingWithdrawals(wallets.deployer.address))["withdrawalTimestamp"];
+            await evmSetNextBlockTimestamp(timestamp.sub(5).toNumber());
+            await evmMine();
+
+            await expect(timelockEscrow.connect(wallets.deployer).withdraw()).to.be.revertedWith("revert Nothing to withdraw");
+        });
+    });
 
     describe('XINV minting and redeeming', function() {
 
@@ -139,36 +278,33 @@ describe("Test", () => {
             await pauseMint(unitroller.address, xINV.address);       
 
             // now attempt mint, should revert
-            const toMint = hre.ethers.utils.parseEther("1");
-            await batchTransferInv([ wallets.admin ], toMint);
+            await batchTransferInv([ wallets.admin ], toMint1);
             
-            await inv.connect(wallets.admin).approve(xINV.address, toMint);
-            await expect(xINV.connect(wallets.admin).mint(toMint)).to.be.revertedWith("revert mint is paused");
+            await inv.connect(wallets.admin).approve(xINV.address, toMint1);
+            await expect(xINV.connect(wallets.admin).mint(toMint1)).to.be.revertedWith("revert mint is paused");
         });
 
         it('should only be minted if user has equal or more amount of INV', async () => {
             await supportMarket(xINV.address, unitroller.address);
-            const toMint = hre.ethers.utils.parseEther("1")
 
             // Approve the transfer of collateral and then transfer to mint xINV.
-            await expect(inv.connect(wallets.deployer).approve(xINV.address, toMint))
-                .to.emit(inv, "Approval").withArgs(wallets.deployer.address, xINV.address, toMint);
-            await expect(xINV.connect(wallets.deployer).mint(toMint)).to.emit(xINV, "Mint");
+            await expect(inv.connect(wallets.deployer).approve(xINV.address, toMint1))
+                .to.emit(inv, "Approval").withArgs(wallets.deployer.address, xINV.address, toMint1);
+            await expect(xINV.connect(wallets.deployer).mint(toMint1)).to.emit(xINV, "Mint");
 
-            expect(await balanceOf(xINV, wallets.deployer.address)).to.equal(toMint);
+            expect(await balanceOf(xINV, wallets.deployer.address)).to.equal(toMint1);
 
             // minting without enough INV
-            await expect(xINV.connect(wallets.deployer).mint(toMint)).to.be.reverted;
+            await expect(xINV.connect(wallets.deployer).mint(toMint1)).to.be.reverted;
         });
 
         it('should have an underlying balance', async () => {
             await supportMarket(xINV.address, unitroller.address);
 
-            const toMint = hre.ethers.utils.parseEther("1")
             // Approve the transfer of collateral and then transfer to mint xINV.
-            await expect(inv.connect(wallets.deployer).approve(xINV.address, toMint))
-                .to.emit(inv, "Approval").withArgs(wallets.deployer.address, xINV.address, toMint);
-            await expect(xINV.connect(wallets.deployer).mint(toMint)).to.emit(xINV, "Mint");
+            await expect(inv.connect(wallets.deployer).approve(xINV.address, toMint1))
+                .to.emit(inv, "Approval").withArgs(wallets.deployer.address, xINV.address, toMint1);
+            await expect(xINV.connect(wallets.deployer).mint(toMint1)).to.emit(xINV, "Mint");
 
             // set initially to 1e18
             const exchangeRate = await xINV.exchangeRateStored();
@@ -181,33 +317,31 @@ describe("Test", () => {
 
         it('should be able to redeem xINV for underlying INV', async() => {
             await supportMarket(xINV.address, unitroller.address);
-            const toMint = hre.ethers.utils.parseEther("2");
 
             // expect failure due to insufficient approval
-            await expect(xINV.connect(wallets.deployer).mint(toMint)).to.be.reverted;
+            await expect(xINV.connect(wallets.deployer).mint(toMint2)).to.be.reverted;
 
             // approve to spend some more
             await inv.connect(wallets.deployer).approve(xINV.address, hre.ethers.utils.parseEther("5"));
-            await expect(xINV.connect(wallets.deployer).mint(toMint)).to.emit(xINV, "Mint");
+            await expect(xINV.connect(wallets.deployer).mint(toMint2)).to.emit(xINV, "Mint");
 
             // redeem cToken aka xINV for underlying and check balances of both xINV and INV
-            const toRedeem = hre.ethers.utils.parseEther("1");
-            await expect(redeem(xINV, wallets.deployer, toRedeem)).to.emit(xINV, "Redeem");
+            await expect(redeem(xINV, wallets.deployer, toRedeem1)).to.emit(xINV, "Redeem");
 
             // escrow is used, so should be able to withdraw explicitly after duration
             // escrow is explicitly set to true for redeeming, so fastforward to duration and withdraw
-            const duration = await timelockEscrow.duration();
-  
-            await hre.network.provider.send("evm_increaseTime", [ duration.sub(3600).toNumber() ]);
-            await hre.network.provider.send("evm_mine");
+            const timestamp = (await timelockEscrow.pendingWithdrawals(wallets.deployer.address))["withdrawalTimestamp"];
+            // increase evm block time just above duration
+            await evmSetNextBlockTimestamp(timestamp.toNumber());
+            //await evmIncreaseTime(duration.add(60).toNumber());
+            await evmMine();
 
             // withdraw funds from escrow
             const oldBalance = await balanceOf(inv, wallets.deployer.address);
-
             await expect(timelockEscrow.connect(wallets.deployer).withdraw())
-                .to.emit(timelockEscrow, "Withdraw").withArgs(wallets.deployer.address, toRedeem);
+                .to.emit(timelockEscrow, "Withdraw").withArgs(wallets.deployer.address, toRedeem1);
             
-            expect(await balanceOf(inv, wallets.deployer.address)).to.be.equal(oldBalance.add(toRedeem));
+            expect(await balanceOf(inv, wallets.deployer.address)).to.be.equal(oldBalance.add(toRedeem1));
         });
 
         it('should be able to redeem xINV for specified amount of INV', async () => {
@@ -219,10 +353,9 @@ describe("Test", () => {
             await timelockEscrow.connect(wallets.deployer)._setEscrowDuration(0);
 
             const balanceBefore = await balanceOf(inv, wallets.deployer.address);
-            const toRedeem = hre.ethers.utils.parseEther("1");
-            await expect(xINV.connect(wallets.deployer).redeemUnderlying(toRedeem))
-                .to.emit(xINV, "Transfer").withArgs(wallets.deployer.address, xINV.address, toRedeem);
-            expect(await balanceOf(inv, wallets.deployer.address)).to.equal(balanceBefore.add(toRedeem));
+            await expect(xINV.connect(wallets.deployer).redeemUnderlying(toRedeem1))
+                .to.emit(xINV, "Transfer").withArgs(wallets.deployer.address, xINV.address, toRedeem1);
+            expect(await balanceOf(inv, wallets.deployer.address)).to.equal(balanceBefore.add(toRedeem1));
         });
     });
 
@@ -279,19 +412,18 @@ describe("Test", () => {
         });
 
         it('gets current votes', async () => {
-            const toMint = hre.ethers.utils.parseEther("3");
 
-            await batchTransferInv([wallets.admin, wallets.delegate], toMint);
-            await batchMint([wallets.admin, wallets.deployer], toMint);
+            await batchTransferInv([wallets.admin, wallets.delegate], toMint3);
+            await batchMint([wallets.admin, wallets.deployer], toMint3);
 
             // 2 different delegations to delegate
             expect(await xINV.getCurrentVotes(wallets.delegate.address)).to.equal(0);
 
             await delegate(xINV, wallets.admin, wallets.delegate.address);
-            expect(await xINV.getCurrentVotes(wallets.delegate.address)).to.equal(toMint);
+            expect(await xINV.getCurrentVotes(wallets.delegate.address)).to.equal(toMint3);
 
             await delegate(xINV, wallets.deployer, wallets.delegate.address);
-            expect(await xINV.getCurrentVotes(wallets.delegate.address)).to.equal(toMint.mul(2));
+            expect(await xINV.getCurrentVotes(wallets.delegate.address)).to.equal(toMint3.mul(2));
         });
     });
 
@@ -299,12 +431,11 @@ describe("Test", () => {
         beforeEach(async () => {
             await supportMarket(xINV.address, unitroller.address);
 
-            const toMint = hre.ethers.utils.parseEther("3");
-            await batchTransferInv([wallets.admin, wallets.delegate], toMint);
-            await batchMint([wallets.admin, wallets.deployer], toMint);
+            await batchTransferInv([wallets.admin, wallets.delegate], toMint3);
+            await batchMint([wallets.admin, wallets.deployer], toMint3);
 
-            expect(await balanceOf(xINV, wallets.deployer.address)).to.be.equal(toMint);
-            expect(await balanceOf(xINV, wallets.admin.address)).to.be.equal(toMint);
+            expect(await balanceOf(xINV, wallets.deployer.address)).to.be.equal(toMint3);
+            expect(await balanceOf(xINV, wallets.admin.address)).to.be.equal(toMint3);
         });
 
         it('returns the number of checkpoints for a delegate', async () => {
@@ -365,9 +496,8 @@ describe("Test", () => {
         beforeEach( async () => {
             await supportMarket(xINV.address, unitroller.address);
 
-            const toMint = hre.ethers.utils.parseEther("3");
-            await batchTransferInv([ wallets.delegate, wallets.admin ], toMint);
-            await batchMint([ wallets.deployer, wallets.admin ], toMint);
+            await batchTransferInv([ wallets.delegate, wallets.admin ], toMint3);
+            await batchMint([ wallets.deployer, wallets.admin ], toMint3);
         });
 
         it('reverts if block number is greater than or equal to current block', async () => {
@@ -411,20 +541,18 @@ describe("Test", () => {
             const txn2 = await delegate(xINV, wallets.admin, wallets.delegate.address);
             await evmMine(); await evmMine();
 
-            const toRedeem = hre.ethers.utils.parseEther("1");
-            const txn3 = await redeem(xINV, wallets.admin, toRedeem);
+            const txn3 = await redeem(xINV, wallets.admin, toRedeem1);
             await evmMine(); await evmMine();
 
             // escrow is explicitly set to true for redeeming, so fastforward to duration and withdraw
-            // fast forward to duration + timestamp
-            const duration = await timelockEscrow.duration();
-  
-            await evmIncreaseTime(duration.sub(3600).toNumber())
+            // fast forward to withdrawaltimestamp
+            const timestamp = (await timelockEscrow.pendingWithdrawals(wallets.admin.address))["withdrawalTimestamp"];
+            await evmSetNextBlockTimestamp(timestamp.add(20).toNumber());
             await evmMine();
-            // withdraw funds from escrow
 
+            // withdraw funds from escrow
             await expect(timelockEscrow.connect(wallets.admin).withdraw())
-                .to.emit(timelockEscrow, "Withdraw").withArgs(wallets.admin.address, toRedeem);
+                .to.emit(timelockEscrow, "Withdraw").withArgs(wallets.admin.address, toRedeem1);
             
             await evmMine();
             // txn1
@@ -440,137 +568,8 @@ describe("Test", () => {
             expect(await xINV.getPriorVotes(wallets.delegate.address, txn2.blockNumber + 1))
                 .to.equal(hre.ethers.utils.parseEther("6"));
             // txn3
-
-            // before time increased 
             expect(await xINV.getPriorVotes(wallets.delegate.address, txn3.blockNumber))
                 .to.equal("6000000000000000000");
-            // after time increase and withdrawal
-            //const blockNumber = await hre.network.provider.send("eth_blockNumber");
-            //console.log(blockNumber)
-            //console.log(wallets.admin.address)
-            //expect(await xINV.getPriorVotes(wallets.delegate.address, txn3.blockNumber + 1))
-            //    .to.equal(hre.ethers.utils.parseEther("5"));
         });
     });
-
-    describe('admin', function() {
-
-        beforeEach( async () => {
-            await supportMarket(xINV.address, unitroller.address);
-        });
-
-        it('should return correct admin', async () => {
-            expect(await xINV.admin()).to.equal(wallets.deployer.address);
-        });
-
-        it('should return correct pending admin', async () => {
-            expect(await xINV.pendingAdmin()).to.equal(await address(0));
-        });
-
-        it('sets new admin', async () => {
-            console.log(wallets.admin.address)
-            await xINV.connect(wallets.admin)._setPendingAdmin(wallets.admin.address)
-            expect(await xINV.admin()).to.equal(wallets.deployer.address);
-
-            // current admin sets pending admin
-            await xINV.connect(wallets.deployer)._setPendingAdmin(wallets.delegate.address);
-            await xINV.connect(wallets.deployer)._setPendingAdmin(wallets.admin.address);
-            expect(await xINV.pendingAdmin()).to.equal(wallets.admin.address);
-
-            // accept admin
-            // first attempt fail from wrong pending admin
-            await xINV.connect(wallets.delegate)._acceptAdmin();
-            expect(await xINV.pendingAdmin()).to.equal(wallets.admin.address);
-
-            // actual pending admin accepting
-            await xINV.connect(wallets.admin)._acceptAdmin();
-            expect(await xINV.pendingAdmin()).to.equal(await address(0));
-            expect(await xINV.admin()).to.equal(wallets.admin.address);     
-        });
-    });
-
-    describe('comptroller', function() {
-
-        beforeEach( async () => {
-            await supportMarket(xINV.address, unitroller.address);
-        });
-
-        it('should only allow admin to set comptroller', async () => {
-            const nonAdmin = wallets.delegate;
-            const signers = await hre.ethers.getSigners()
-            let newComptroller = signers[3];
-
-            await xINV.connect(nonAdmin)._setComptroller(newComptroller.address);
-            expect(await xINV.comptroller()).to.equal(unitroller.address);
-
-            // fail if not real comptroller contract
-            console.log(await xINV.comptroller());
-            await expect(xINV.connect(wallets.deployer)._setComptroller(newComptroller.address)).to.be.reverted;
-            expect(await xINV.comptroller()).to.equal(unitroller.address);
-            console.log(await xINV.comptroller())
-
-            newComptroller = await hre.waffle.deployContract(wallets.deployer, ComptrollerArtifact, []);
-            await xINV.connect(wallets.deployer)._setComptroller(newComptroller.address);
-            expect(await xINV.comptroller()).to.equal(newComptroller.address);
-        });
-    });
-
-    describe('timelock escrow', function () {
-
-        beforeEach( async () => {
-            await supportMarket(xINV.address, unitroller.address);
-        });
-
-        it('sets governance, underlying and market on init', async () => {
-            expect(await timelockEscrow.underlying()).to.equal(inv.address);
-            expect(await timelockEscrow.governance()).to.equal(wallets.deployer.address);
-            expect(await timelockEscrow.market()).to.equal(xINV.address);
-        });
-
-        it('only allows governance to set escrow duration', async () => {
-            const nonGov = wallets.delegate;
-            await expect(timelockEscrow.connect(nonGov)._setEscrowDuration(1e6))
-                .to.revertedWith("revert only governance can set escrow duration");
-            
-            await timelockEscrow.connect(wallets.deployer)._setEscrowDuration(1e6);
-            expect(await timelockEscrow.duration()).to.equal(1e6);
-        });
-
-        it('only allows governance to set another governance', async () => {
-            const nonGov = wallets.delegate;
-            await expect(timelockEscrow.connect(nonGov)._setGov(wallets.admin.address))
-                .to.revertedWith("revert only governance can set its new address");
-            
-            await timelockEscrow.connect(wallets.deployer)._setGov(wallets.admin.address);
-            expect(await timelockEscrow.governance()).to.equal(wallets.admin.address); 
-        });
-
-        it('accepts pending withdrawals', async () => {
-            // approve  and mint
-            await batchMint([ wallets.deployer ], hre.ethers.utils.parseEther("5"));
-
-            // redeem cToken aka xINV for underlying and check balances of both xINV and INV
-            const toRedeem = hre.ethers.utils.parseEther("1");
-            await redeem(xINV, wallets.deployer, toRedeem);
-
-            const escrowPendingWithdrawal = (await timelockEscrow.pendingWithdrawals(wallets.deployer.address))["amount"];
-            expect(escrowPendingWithdrawal).to.equal(toRedeem);
-        });
-
-        it('transfers withdrawable directly to redeemer if duration is 0', async () => {
-            // approve  and mint
-            await batchMint([ wallets.deployer ], hre.ethers.utils.parseEther("5"));
-
-            // send redeemer directly their withdrawable
-            await timelockEscrow.connect(wallets.deployer)._setEscrowDuration(0);
-            expect(await timelockEscrow.duration()).to.equal(0);
-
-            // redeem cToken aka xINV for underlying
-            const balanceBefore = await balanceOf(inv, wallets.deployer.address);
-            const toRedeem = hre.ethers.utils.parseEther("1");
-            await redeem(xINV, wallets.deployer, toRedeem);
-            expect(await balanceOf(inv, wallets.deployer.address)).to.equal(balanceBefore.add(toRedeem));
-        });
-    });
-
 });
