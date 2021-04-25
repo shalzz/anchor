@@ -2,6 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require('@nomiclabs/hardhat-etherscan')
 require('hardhat-deploy')
 require('dotenv').config()
+require('solidity-coverage')
 
 require('@eth-optimism/smock/build/src/plugins/hardhat-storagelayout')
 
