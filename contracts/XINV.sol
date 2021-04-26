@@ -901,7 +901,7 @@ contract TimelockEscrow {
      */
     function withdrawable(address user) public view returns (uint amount) {
         EscrowData memory withdrawal = pendingWithdrawals[user];
-        if(block.timestamp >= withdrawal.withdrawalTimestamp) {
+        if(withdrawal.withdrawalTimestamp <= block.timestamp) {
             amount = withdrawal.amount;
         }
     }
