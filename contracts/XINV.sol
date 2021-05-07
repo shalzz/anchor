@@ -70,6 +70,10 @@ contract xInvCore is Exponential, TokenErrorReporter {
      */
     uint public totalSupply;
 
+    uint public rewardPerBlock;
+
+    address public rewardTreasury;
+
     /**
      * @notice Official record of token balances for each account
      */
@@ -110,6 +114,16 @@ contract xInvCore is Exponential, TokenErrorReporter {
     event NewComptroller(ComptrollerInterface oldComptroller, ComptrollerInterface newComptroller);
 
     /**
+     * @notice Event emitted when reward treasury is changed
+     */
+    event NewRewardTreasury(address oldRewardTreasury, address newRewardTreasury);
+
+    /**
+     * @notice Event emitted when reward per block is changed
+     */
+    event NewRewardPerBlock(uint oldRewardPerBlock, uint newRewardPerBlock);
+
+    /**
      * @notice EIP20 Transfer event
      */
     event Transfer(address indexed from, address indexed to, uint amount);
@@ -129,10 +143,13 @@ contract xInvCore is Exponential, TokenErrorReporter {
      */
     function initialize(ComptrollerInterface comptroller_,
                         uint initialExchangeRateMantissa_,
+                        uint rewardPerBlock_,
+                        address rewardTreasury_,
                         string memory name_,
                         string memory symbol_,
                         uint8 decimals_) internal {
         require(msg.sender == admin, "only admin may initialize the market");
+        require(accrualBlockNumber == 0, "market may only be initialized once");
 
         // Set initial exchange rate
         initialExchangeRateMantissa = initialExchangeRateMantissa_;
@@ -145,6 +162,9 @@ contract xInvCore is Exponential, TokenErrorReporter {
         name = name_;
         symbol = symbol_;
         decimals = decimals_;
+        accrualBlockNumber = getBlockNumber();
+        rewardPerBlock = rewardPerBlock_;
+        rewardTreasury = rewardTreasury_;
 
         // The counter starts true to prevent changing it from zero to non-zero (i.e. smaller cost/refund)
         _notEntered = true;
@@ -203,6 +223,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
      * @return Calculated exchange rate scaled by 1e18
      */
     function exchangeRateCurrent() public nonReentrant returns (uint) {
+        require(accrueInterest() == uint(Error.NO_ERROR), "accrue interest failed");
         return exchangeRateStored();
     }
 
@@ -254,10 +275,38 @@ contract xInvCore is Exponential, TokenErrorReporter {
         return getCashPrior();
     }
 
-    // for calls by other cTokens
+    // brings rewards from treasury into this contract
     function accrueInterest() public returns (uint) {
-        accrualBlockNumber = block.number;
-        return 0;
+        /* Remember the initial block number */
+        uint currentBlockNumber = getBlockNumber();
+        uint accrualBlockNumberPrior = accrualBlockNumber;
+
+        /* Short-circuit accumulating 0 interest */
+        if (accrualBlockNumberPrior == currentBlockNumber) {
+            return uint(Error.NO_ERROR);
+        }
+
+        /* Calculate the number of blocks elapsed since the last accrual */
+        (MathError mathErr, uint blockDelta) = subUInt(currentBlockNumber, accrualBlockNumberPrior);
+        require(mathErr == MathError.NO_ERROR, "could not calculate block delta");
+        
+        /* Calculate accumulated reward amount */
+        uint reward;
+        
+        (mathErr, reward) = mulUInt(rewardPerBlock, blockDelta);
+        require(mathErr == MathError.NO_ERROR, "could not calculate reward");
+
+        if(rewardTreasury != address(0) && canTransferIn(rewardTreasury, reward)) {
+            doTransferIn(rewardTreasury, reward);
+        }
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        accrualBlockNumber = currentBlockNumber;
+
+        return uint(Error.NO_ERROR);
     }
 
     /**
@@ -266,6 +315,11 @@ contract xInvCore is Exponential, TokenErrorReporter {
      * @return (uint, uint) An error code (0=success, otherwise a failure, see ErrorReporter.sol), and the actual mint amount.
      */
     function mintInternal(uint mintAmount) internal nonReentrant returns (uint, uint) {
+        uint error = accrueInterest();
+        if (error != uint(Error.NO_ERROR)) {
+            // accrueInterest emits logs on errors, but we still want to log the fact that an attempted borrow failed
+            return (fail(Error(error), FailureInfo.MINT_ACCRUE_INTEREST_FAILED), 0);
+        }
         // mintFresh emits the actual Mint event if successful and logs on errors, so we don't need to
         return mintFresh(msg.sender, mintAmount);
     }
@@ -357,6 +411,11 @@ contract xInvCore is Exponential, TokenErrorReporter {
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
     function redeemInternal(uint redeemTokens, bool useEscrow) internal nonReentrant returns (uint) {
+        uint error = accrueInterest();
+        if (error != uint(Error.NO_ERROR)) {
+            // accrueInterest emits logs on errors, but we still want to log the fact that an attempted redeem failed
+            return fail(Error(error), FailureInfo.REDEEM_ACCRUE_INTEREST_FAILED);
+        }
         // redeemFresh emits redeem-specific logs on errors, so we don't need to
         return redeemFresh(msg.sender, redeemTokens, 0, useEscrow);
     }
@@ -367,6 +426,11 @@ contract xInvCore is Exponential, TokenErrorReporter {
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
      */
     function redeemUnderlyingInternal(uint redeemAmount, bool useEscrow) internal nonReentrant returns (uint) {
+        uint error = accrueInterest();
+        if (error != uint(Error.NO_ERROR)) {
+            // accrueInterest emits logs on errors, but we still want to log the fact that an attempted redeem failed
+            return fail(Error(error), FailureInfo.REDEEM_ACCRUE_INTEREST_FAILED);
+        }
         // redeemFresh emits redeem-specific logs on errors, so we don't need to
         return redeemFresh(msg.sender, 0, redeemAmount, useEscrow);
     }
@@ -637,6 +701,31 @@ contract xInvCore is Exponential, TokenErrorReporter {
         return uint(Error.NO_ERROR);
     }
 
+    function _setRewardTreasury(address newRewardTreasury) public returns (uint) {
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COMPTROLLER_OWNER_CHECK);
+        }
+        
+        address oldRewardTreasury = rewardTreasury;
+        rewardTreasury = newRewardTreasury; // it's acceptable to set it as address(0)
+
+        emit NewRewardTreasury(oldRewardTreasury, newRewardTreasury);
+    }
+
+    function _setRewardPerBlock(uint newRewardPerBlock) public returns (uint) {
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COMPTROLLER_OWNER_CHECK);
+        }
+
+        uint oldRewardPerBlock = rewardPerBlock;
+        rewardPerBlock = newRewardPerBlock; // it's acceptable to set it as 0
+
+        emit NewRewardPerBlock(oldRewardPerBlock, newRewardPerBlock);
+
+    }
+
     /*** Safe Token ***/
 
     /**
@@ -652,6 +741,8 @@ contract xInvCore is Exponential, TokenErrorReporter {
      */
     function doTransferIn(address from, uint amount) internal returns (uint);
 
+    function canTransferIn(address from, uint amount) internal view returns (bool);
+    
     /**
      * @dev Performs a transfer out, ideally returning an explanatory error code upon failure tather than reverting.
      *  If caller has not called checked protocol's balance, may revert due to insufficient cash held in the contract.
@@ -941,6 +1032,8 @@ contract XINV is xInvCore {
      */
     constructor(address underlying_,
                 ComptrollerInterface comptroller_,
+                uint rewardPerBlock_,        
+                address rewardTreasury_,
                 string memory name_,
                 string memory symbol_,
                 uint8 decimals_,
@@ -949,7 +1042,7 @@ contract XINV is xInvCore {
         admin = msg.sender;
 
         // CToken initialize does the bulk of the work
-        super.initialize(comptroller_, 1e18, name_, symbol_, decimals_);
+        super.initialize(comptroller_, 1e18, rewardPerBlock_, rewardTreasury_, name_, symbol_, decimals_);
 
         // Set underlying and sanity check it
         underlying = underlying_;
@@ -1046,6 +1139,16 @@ contract XINV is xInvCore {
         uint balanceAfter = EIP20Interface(underlying).balanceOf(address(this));
         require(balanceAfter >= balanceBefore, "TOKEN_TRANSFER_IN_OVERFLOW");
         return balanceAfter - balanceBefore;   // underflow already checked above, just subtract
+    }
+
+    /**
+     * @dev returns true if `from` has sufficient allowance and balance to to send `amount` to this address
+     */
+    function canTransferIn(address from, uint amount) internal view returns (bool) {
+        EIP20Interface token = EIP20Interface(underlying);
+        uint balance = token.balanceOf(from);
+        uint allowance = token.allowance(from, address(this));
+        return balance >= amount && allowance >= amount;
     }
 
     /**
