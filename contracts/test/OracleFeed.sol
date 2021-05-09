@@ -20,10 +20,9 @@ contract OracleFeed is Feed {
     }
     
     /*
-     * @dev for simplicity sake, generate random number with block number
+     * @dev for simplicity sake
      */
     function latestAnswer() external view returns (uint256) {
-        uint256 answer = uint256(keccak256(abi.encode("key", blockhash(block.number))));
-        return answer;
+        return 900 * 1e18;
     }
 }

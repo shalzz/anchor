@@ -2,7 +2,6 @@ require("@nomiclabs/hardhat-waffle");
 require('@nomiclabs/hardhat-etherscan')
 require('hardhat-deploy')
 require('dotenv').config()
-
 require('@eth-optimism/smock/build/src/plugins/hardhat-storagelayout')
 
 // You need to export an object to set up your config
@@ -63,8 +62,11 @@ module.exports = {
     inv: {
       1: "0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68"
     },
+    treasury: {
+      4: 1
+    },
     deployer:{
       default:0
-    }
+    },
   }
 };
