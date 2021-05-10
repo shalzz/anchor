@@ -4,7 +4,7 @@ module.exports = async ({
   }) => {
     console.log("28. Deploy xINV")
     const { deploy, save } = deployments;
-    const { deployer, inv, treasury } = await getNamedAccounts();
+    const { deployer, inv, gov } = await getNamedAccounts();
 
     const comptroller = await deployments.get('Comptroller');
     const name = 'XINV';
@@ -16,8 +16,8 @@ module.exports = async ({
       args:[
           inv, // inverse as underlying
           comptroller.address,
-          "200000000000000000", // reward per block
-          treasury,
+          "8000000000000000", // reward per block
+          gov,
           name,
           symbol,
           decimals,

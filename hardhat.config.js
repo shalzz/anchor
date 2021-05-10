@@ -62,9 +62,6 @@ module.exports = {
     inv: {
       1: "0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68"
     },
-    treasury: {
-      4: 1
-    },
     deployer:{
       default:0
     },
