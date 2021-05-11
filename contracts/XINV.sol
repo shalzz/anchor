@@ -7,7 +7,6 @@ import "./EIP20Interface.sol";
 import "./EIP20NonStandardInterface.sol";
 import "./SafeMath.sol";
 import "./Governance/INV.sol";
-
 /**
  * @title xINV Core contract
  * @notice Abstract base for xINV
@@ -1000,6 +999,7 @@ contract TimelockEscrow {
 
     function withdraw() public {
         uint amount = withdrawable(msg.sender);
+        EscrowData memory withdrawal = pendingWithdrawals[msg.sender];
         require(amount > 0, "Nothing to withdraw");
         EIP20Interface token = EIP20Interface(underlying);
         delete pendingWithdrawals[msg.sender];

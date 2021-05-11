@@ -2,7 +2,6 @@ require("@nomiclabs/hardhat-waffle");
 require('@nomiclabs/hardhat-etherscan')
 require('hardhat-deploy')
 require('dotenv').config()
-
 require('@eth-optimism/smock/build/src/plugins/hardhat-storagelayout')
 
 // You need to export an object to set up your config
@@ -22,6 +21,7 @@ module.exports = {
     }
   },
   networks:{
+    hardhat: {},
     rinkeby:{
       url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
       accounts: [process.env.RINKEBY_PRIVKEY]
@@ -59,9 +59,11 @@ module.exports = {
       1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
       4:0
     },
+    inv: {
+      1: "0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68"
+    },
     deployer:{
       default:0
-    }
+    },
   }
 };
-
