@@ -59,6 +59,15 @@ module.exports = {
       1:"0x926dF14a23BE491164dCF93f4c468A50ef659D5B",
       4:0
     },
+    inv:{
+      1:"0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68",
+    },
+    weth:{
+      1:"0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    },
+    invKeep3rFeed:{
+      1:"0xe14e206066A5d3525714a25255eF10b29FFA4Efa",
+    },    
     deployer:{
       default:0
     }
