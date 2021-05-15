@@ -60,7 +60,8 @@ module.exports = {
       4:0
     },
     inv: {
-      1: "0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68"
+      1: "0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68",
+      4:"0xA11f04EFa86C3b32680dC9C2b9D43889E2B8136c"
     },
     deployer:{
       default:0
