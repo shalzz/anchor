@@ -295,7 +295,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         (mathErr, reward) = mulUInt(rewardPerBlock, blockDelta);
         require(mathErr == MathError.NO_ERROR, "could not calculate reward");
 
-        if(rewardTreasury != address(0) && canTransferIn(rewardTreasury, reward)) {
+        if(totalSupply > 0 && rewardTreasury != address(0) && canTransferIn(rewardTreasury, reward)) {
             doTransferIn(rewardTreasury, reward);
         }
 
