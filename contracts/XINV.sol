@@ -943,7 +943,7 @@ contract TimelockEscrow {
     address public underlying;
     address public governance;
     address public market;
-    uint public duration = 1 minutes;
+    uint public duration = 14 days;
     mapping (address => EscrowData) public pendingWithdrawals;
 
     struct EscrowData {
