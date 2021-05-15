@@ -63,6 +63,12 @@ module.exports = {
       1: "0x41d5d79431a913c4ae7d69a668ecdfe5ff9dfb68",
       4:"0xA11f04EFa86C3b32680dC9C2b9D43889E2B8136c"
     },
+    weth:{
+      1:"0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    },
+    invKeep3rFeed:{
+      1:"0x39b1dF026010b5aEA781f90542EE19E900F2Db15",
+    },    
     deployer:{
       default:0
     },
