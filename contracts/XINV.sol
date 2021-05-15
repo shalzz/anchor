@@ -6,7 +6,7 @@ import "./Exponential.sol";
 import "./EIP20Interface.sol";
 import "./EIP20NonStandardInterface.sol";
 import "./SafeMath.sol";
-import "./Governance/INV.sol";
+import "./Governance/IINV.sol";
 /**
  * @title xINV Core contract
  * @notice Abstract base for xINV
@@ -943,7 +943,7 @@ contract TimelockEscrow {
     address public underlying;
     address public governance;
     address public market;
-    uint public duration = 14 days;
+    uint public duration = 1 minutes;
     mapping (address => EscrowData) public pendingWithdrawals;
 
     struct EscrowData {
@@ -1066,7 +1066,7 @@ contract XINV is xInvCore {
         
         /* if user has no delegate, we inherit delegate from INV */
         if(delegates[msg.sender] == address(0)) {
-            address invDelegate = INV(underlying).delegates(msg.sender);
+            address invDelegate = IINV(underlying).delegates(msg.sender);
             if(invDelegate != address(0)) {
                 _delegate(msg.sender, invDelegate);
             }
