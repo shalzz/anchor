@@ -94,10 +94,13 @@ describe("xINV Test", () => {
             await evmSetAutomine(false);
             const toMint = "10000000000000000000";
             await inv.connect(wallets.deployer).mint(wallets.treasury.address, toMint);
+            await inv.connect(wallets.deployer).mint(wallets.deployer.address, toMint);
+            await inv.connect(wallets.deployer).approve(xINV.address, toMint);
+            await xINV.mint(toMint);
             await xINV.accrueInterest();
             await evmMine();
             // cannot transfer in after accrueInterest due to not enough allowance
-            expect(await balanceOf(inv, xINV.address)).to.equal(0);
+            expect(await balanceOf(inv, xINV.address)).to.equal(toMint);
 
             await inv.connect(wallets.treasury).approve(xINV.address, toMint);
 
@@ -124,6 +127,9 @@ describe("xINV Test", () => {
             const toMint = "10000000000000000000";
             await inv.connect(wallets.deployer).mint(wallets.treasury.address, toMint);
             await inv.connect(wallets.treasury).approve(xINV.address, toMint);
+            await inv.connect(wallets.deployer).mint(wallets.deployer.address, toMint);
+            await inv.connect(wallets.deployer).approve(xINV.address, toMint);
+            await xINV.mint(toMint);
 
             const contractBalanceBefore = await balanceOf(inv, xINV.address);
             const treasuryBalanceBefore = await balanceOf(inv, wallets.treasury.address);
