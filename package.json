@@ -40,7 +40,7 @@
     "cli-table": "^0.3.5",
     "dotenv": "^8.2.0",
     "eth-saddle": "^0.1.21",
-    "hardhat": "^2.0.8",
+    "hardhat": "^2.2.1",
     "hardhat-deploy": "^0.7.0-beta.44",
     "prompt-sync": "^4.2.0"
   },

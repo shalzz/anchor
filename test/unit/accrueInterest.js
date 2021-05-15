@@ -9,6 +9,7 @@ describe("xINV Test", () => {
 
     before( async () => {
         await init();
+        
     });
     
     beforeEach( async () => {
