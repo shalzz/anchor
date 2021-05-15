@@ -6,8 +6,8 @@ module.exports = async ({
     const { deploy, save } = deployments;
     const { deployer, inv, gov } = await getNamedAccounts();
 
-    const comptroller = await deployments.get('Comptroller');
-    const name = 'XINV';
+    const comptroller = await deployments.get('Unitroller');
+    const name = 'xINV';
     const symbol = 'XINV';
     const decimals = 18;
 
@@ -21,7 +21,7 @@ module.exports = async ({
           name,
           symbol,
           decimals,
-          deployer // deployer as admin
+          gov // governance as admin
       ]
     });
 
