@@ -1186,4 +1186,19 @@ contract XINV is xInvCore {
             escrow.escrow(to, amount);
         }
     }
+
+    function _setTimelockEscrow(TimelockEscrow newTimelockEscrow) public returns (uint) {
+        require(newTimelockEscrow.market() == address(this), "sanity check: newTimelockEscrow must use this market");
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COMPTROLLER_OWNER_CHECK);
+        }
+        
+        TimelockEscrow oldTimelockEscrow = escrow;
+        escrow = newTimelockEscrow;
+
+        emit NewTimelockEscrow(oldTimelockEscrow, newTimelockEscrow);
+    }
+
+    event NewTimelockEscrow(TimelockEscrow oldTimelockEscrow, TimelockEscrow newTimelockEscrow);
 }
