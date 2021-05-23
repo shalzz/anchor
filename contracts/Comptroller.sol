@@ -1062,9 +1062,7 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
         uint currentCompSpeed = compSpeeds[address(cToken)];
         if (currentCompSpeed != 0) {
             // note that COMP speed could be set to 0 to halt liquidity rewards for a market
-            Exp memory borrowIndex = Exp({mantissa: cToken.borrowIndex()});
             updateCompSupplyIndex(address(cToken));
-            //updateCompBorrowIndex(address(cToken), borrowIndex);
         } else if (compSpeed != 0) {
             // Add the COMP market
             Market storage market = markets[address(cToken)];
@@ -1113,29 +1111,6 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
             supplyState.block = safe32(blockNumber, "block number exceeds 32 bits");
         }
     }
-
-    /**
-     * @notice Accrue COMP to the market by updating the borrow index
-     * @param cToken The market whose borrow index to update
-     */
-    // function updateCompBorrowIndex(address cToken, Exp memory marketBorrowIndex) internal {
-    //     CompMarketState storage borrowState = compBorrowState[cToken];
-    //     uint borrowSpeed = compSpeeds[cToken];
-    //     uint blockNumber = getBlockNumber();
-    //     uint deltaBlocks = sub_(blockNumber, uint(borrowState.block));
-    //     if (deltaBlocks > 0 && borrowSpeed > 0) {
-    //         uint borrowAmount = div_(CToken(cToken).totalBorrows(), marketBorrowIndex);
-    //         uint compAccrued = mul_(deltaBlocks, borrowSpeed);
-    //         Double memory ratio = borrowAmount > 0 ? fraction(compAccrued, borrowAmount) : Double({mantissa: 0});
-    //         Double memory index = add_(Double({mantissa: borrowState.index}), ratio);
-    //         compBorrowState[cToken] = CompMarketState({
-    //             index: safe224(index.mantissa, "new index exceeds 224 bits"),
-    //             block: safe32(blockNumber, "block number exceeds 32 bits")
-    //         });
-    //     } else if (deltaBlocks > 0) {
-    //         borrowState.block = safe32(blockNumber, "block number exceeds 32 bits");
-    //     }
-    // }
 
     /**
      * @notice Calculate COMP accrued by a supplier and possibly transfer it to them
@@ -1229,9 +1204,8 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
         for (uint i = 0; i < cTokens.length; i++) {
             CToken cToken = cTokens[i];
             require(markets[address(cToken)].isListed, "market must be listed");
-            if (borrowers == true) {
+            if (borrowers == true && address(cToken) != getXinvAddress()) {
                 Exp memory borrowIndex = Exp({mantissa: cToken.borrowIndex()});
-                //updateCompBorrowIndex(address(cToken), borrowIndex);
                 for (uint j = 0; j < holders.length; j++) {
                     distributeBorrowerComp(address(cToken), holders[j], borrowIndex);
                     compAccrued[holders[j]] = grantCompInternal(holders[j], compAccrued[holders[j]]);
@@ -1339,5 +1313,13 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
      */
     function getTreasuryAddress() public view returns (address) {
         return 0x926dF14a23BE491164dCF93f4c468A50ef659D5B;
+    }
+
+    /**
+     * @notice Return the address of the xINV market
+     * @return The address of xINV
+     */
+    function getXinvAddress() public view returns (address) {
+        return 0x65b35d6Eb7006e0e607BC54EB2dFD459923476fE;
     }
 }
