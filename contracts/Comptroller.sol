@@ -1338,6 +1338,6 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
      * @return The address of treasury
      */
     function getTreasuryAddress() public view returns (address) {
-        return 0x926dF14a23BE491164dCF93f4c468A50ef659D5B; // INV Token
+        return 0x926dF14a23BE491164dCF93f4c468A50ef659D5B;
     }
 }
