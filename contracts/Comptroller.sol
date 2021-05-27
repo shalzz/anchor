@@ -6,7 +6,7 @@ import "./PriceOracle.sol";
 import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
-import "./Governance/INV.sol";
+import "./Governance/IINV.sol";
 
 /**
  * @title Compound's Comptroller Contract
@@ -1221,7 +1221,7 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
      * @return The amount of COMP which was NOT transferred to the user
      */
     function grantCompInternal(address user, uint amount) internal returns (uint) {
-        INV comp = INV(getCompAddress());
+        IINV comp = IINV(getCompAddress());
         uint allowance = comp.allowance(getTreasuryAddress(), address(this));
         uint balance = comp.balanceOf(getTreasuryAddress());
         uint compRemaining = allowance < balance? allowance: balance; // minimum
