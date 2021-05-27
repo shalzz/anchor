@@ -1073,12 +1073,6 @@ contract Comptroller is ComptrollerV5Storage, ComptrollerInterface, ComptrollerE
                 });
             }
 
-            // if (compBorrowState[address(cToken)].index == 0 && compBorrowState[address(cToken)].block == 0) {
-            //     compBorrowState[address(cToken)] = CompMarketState({
-            //         index: compInitialIndex,
-            //         block: safe32(getBlockNumber(), "block number exceeds 32 bits")
-            //     });
-            // }
         }
 
         if (currentCompSpeed != compSpeed) {
