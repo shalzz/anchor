@@ -8,7 +8,7 @@ interface IFeed {
 }
 
 interface StethEthFeed {
-    function safe_price() external view returns (uint256 price, uint timestamp);
+    function current_price() external view returns (uint256 price, bool is_safe);
 }
 
 contract StethFeed is IFeed {
@@ -27,7 +27,8 @@ contract StethFeed is IFeed {
     }
 
     function latestAnswer() public view returns (uint) {
-        (uint stethEthPrice, ) = stethEthFeed.safe_price();
+        (uint stethEthPrice, bool isSafe) = stethEthFeed.current_price();
+        require(isSafe, "price is not safe");
         return stethEthPrice
             .mul(ethFeed.latestAnswer())
             .div(10**uint256(ethFeed.decimals()));
