@@ -27,7 +27,12 @@ The main goal during the launch is to be as lean as possible. Anchor is very amb
 
 Installation
 ------------
+Prerequisite: Install [yarn](https://classic.yarnpkg.com/en/docs/install/#debian-stable)
+```bash
+    git clone https://github.com/InverseFinance/anchor.git
+    cd anchor
     yarn install --lock-file
+```
 
 Check out `.env.example` and copy it for `.env` file template
 
@@ -40,3 +45,8 @@ Testing
 -------
 
     yarn test
+
+
+Documentation
+--------------
+You can read more about Inverse finance documentation [here](https://docs.inverse.finance/)
