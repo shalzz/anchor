@@ -68,6 +68,9 @@ module.exports = {
     },
     invKeep3rFeed:{
       1:"0x39b1dF026010b5aEA781f90542EE19E900F2Db15",
+    },
+    stethEthFeed: {
+      1:"0xAb55Bf4DfBf469ebfe082b7872557D1F87692Fe6"
     },    
     deployer:{
       default:0

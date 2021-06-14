@@ -1,0 +1,144 @@
+{
+  "address": "0x1b086779E47509bDc9f49f1ED31eefB1ef156deB",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract StethEthFeed",
+          "name": "_stethEthFeed",
+          "type": "address"
+        },
+        {
+          "internalType": "contract IFeed",
+          "name": "_ethFeed",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "ethFeed",
+      "outputs": [
+        {
+          "internalType": "contract IFeed",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "latestAnswer",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "stethEthFeed",
+      "outputs": [
+        {
+          "internalType": "contract StethEthFeed",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xf7f1328f928eda5c736d5d3c760bac5cee595b3d4e518b255ecd7dc7ce0c0d41",
+  "receipt": {
+    "to": null,
+    "from": "0x3FcB35a1CbFB6007f9BC638D388958Bc4550cB28",
+    "contractAddress": "0x1b086779E47509bDc9f49f1ED31eefB1ef156deB",
+    "transactionIndex": 197,
+    "gasUsed": "334502",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x7022efc3c5f94ec3b51e21161207ce022fca54e835fd4227f5ffae60dd00170b",
+    "transactionHash": "0xf7f1328f928eda5c736d5d3c760bac5cee595b3d4e518b255ecd7dc7ce0c0d41",
+    "logs": [],
+    "blockNumber": 12589701,
+    "cumulativeGasUsed": "13202532",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xAb55Bf4DfBf469ebfe082b7872557D1F87692Fe6",
+    "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
+  ],
+  "solcInputHash": "c34a77575f9d08fa79618703d4b20c8b",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.16+commit.9c3226ce.mod\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract StethEthFeed\",\"name\":\"_stethEthFeed\",\"type\":\"address\"},{\"internalType\":\"contract IFeed\",\"name\":\"_ethFeed\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"ethFeed\",\"outputs\":[{\"internalType\":\"contract IFeed\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"latestAnswer\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"stethEthFeed\",\"outputs\":[{\"internalType\":\"contract StethEthFeed\",\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"contracts/StethFeed.sol\":\"StethFeed\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/SafeMath.sol\":{\"content\":\"pragma solidity ^0.5.16;\\n\\n// From https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/Math.sol\\n// Subject to the MIT license.\\n\\n/**\\n * @dev Wrappers over Solidity's arithmetic operations with added overflow\\n * checks.\\n *\\n * Arithmetic operations in Solidity wrap on overflow. This can easily result\\n * in bugs, because programmers usually assume that an overflow raises an\\n * error, which is the standard behavior in high level programming languages.\\n * `SafeMath` restores this intuition by reverting the transaction when an\\n * operation overflows.\\n *\\n * Using this library instead of the unchecked operations eliminates an entire\\n * class of bugs, so it's recommended to use it always.\\n */\\nlibrary SafeMath {\\n    /**\\n     * @dev Returns the addition of two unsigned integers, reverting on overflow.\\n     *\\n     * Counterpart to Solidity's `+` operator.\\n     *\\n     * Requirements:\\n     * - Addition cannot overflow.\\n     */\\n    function add(uint256 a, uint256 b) internal pure returns (uint256) {\\n        uint256 c = a + b;\\n        require(c >= a, \\\"SafeMath: addition overflow\\\");\\n\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the addition of two unsigned integers, reverting with custom message on overflow.\\n     *\\n     * Counterpart to Solidity's `+` operator.\\n     *\\n     * Requirements:\\n     * - Addition cannot overflow.\\n     */\\n    function add(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {\\n        uint256 c = a + b;\\n        require(c >= a, errorMessage);\\n\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the subtraction of two unsigned integers, reverting on underflow (when the result is negative).\\n     *\\n     * Counterpart to Solidity's `-` operator.\\n     *\\n     * Requirements:\\n     * - Subtraction cannot underflow.\\n     */\\n    function sub(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return sub(a, b, \\\"SafeMath: subtraction underflow\\\");\\n    }\\n\\n    /**\\n     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on underflow (when the result is negative).\\n     *\\n     * Counterpart to Solidity's `-` operator.\\n     *\\n     * Requirements:\\n     * - Subtraction cannot underflow.\\n     */\\n    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {\\n        require(b <= a, errorMessage);\\n        uint256 c = a - b;\\n\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the multiplication of two unsigned integers, reverting on overflow.\\n     *\\n     * Counterpart to Solidity's `*` operator.\\n     *\\n     * Requirements:\\n     * - Multiplication cannot overflow.\\n     */\\n    function mul(uint256 a, uint256 b) internal pure returns (uint256) {\\n        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the\\n        // benefit is lost if 'b' is also tested.\\n        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522\\n        if (a == 0) {\\n            return 0;\\n        }\\n\\n        uint256 c = a * b;\\n        require(c / a == b, \\\"SafeMath: multiplication overflow\\\");\\n\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the multiplication of two unsigned integers, reverting on overflow.\\n     *\\n     * Counterpart to Solidity's `*` operator.\\n     *\\n     * Requirements:\\n     * - Multiplication cannot overflow.\\n     */\\n    function mul(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {\\n        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the\\n        // benefit is lost if 'b' is also tested.\\n        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522\\n        if (a == 0) {\\n            return 0;\\n        }\\n\\n        uint256 c = a * b;\\n        require(c / a == b, errorMessage);\\n\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the integer division of two unsigned integers.\\n     * Reverts on division by zero. The result is rounded towards zero.\\n     *\\n     * Counterpart to Solidity's `/` operator. Note: this function uses a\\n     * `revert` opcode (which leaves remaining gas untouched) while Solidity\\n     * uses an invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     * - The divisor cannot be zero.\\n     */\\n    function div(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return div(a, b, \\\"SafeMath: division by zero\\\");\\n    }\\n\\n    /**\\n     * @dev Returns the integer division of two unsigned integers.\\n     * Reverts with custom message on division by zero. The result is rounded towards zero.\\n     *\\n     * Counterpart to Solidity's `/` operator. Note: this function uses a\\n     * `revert` opcode (which leaves remaining gas untouched) while Solidity\\n     * uses an invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     * - The divisor cannot be zero.\\n     */\\n    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {\\n        // Solidity only automatically asserts when dividing by 0\\n        require(b > 0, errorMessage);\\n        uint256 c = a / b;\\n        // assert(a == b * c + a % b); // There is no case in which this doesn't hold\\n\\n        return c;\\n    }\\n\\n    /**\\n     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),\\n     * Reverts when dividing by zero.\\n     *\\n     * Counterpart to Solidity's `%` operator. This function uses a `revert`\\n     * opcode (which leaves remaining gas untouched) while Solidity uses an\\n     * invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     * - The divisor cannot be zero.\\n     */\\n    function mod(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return mod(a, b, \\\"SafeMath: modulo by zero\\\");\\n    }\\n\\n    /**\\n     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),\\n     * Reverts with custom message when dividing by zero.\\n     *\\n     * Counterpart to Solidity's `%` operator. This function uses a `revert`\\n     * opcode (which leaves remaining gas untouched) while Solidity uses an\\n     * invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     * - The divisor cannot be zero.\\n     */\\n    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {\\n        require(b != 0, errorMessage);\\n        return a % b;\\n    }\\n}\\n\",\"keccak256\":\"0x6653e37ff57a02b7b7f20199bb0fd5685756ced19a67f53328b42c9d2167ffd2\"},\"contracts/StethFeed.sol\":{\"content\":\"pragma solidity ^0.5.16;\\n\\nimport \\\"./SafeMath.sol\\\";\\n\\ninterface IFeed {\\n    function decimals() external view returns (uint8);\\n    function latestAnswer() external view returns (uint);\\n}\\n\\ninterface StethEthFeed {\\n    function current_price() external view returns (uint256 price, bool is_safe);\\n}\\n\\ncontract StethFeed is IFeed {\\n    using SafeMath for uint;\\n\\n    StethEthFeed public stethEthFeed;\\n    IFeed public ethFeed;\\n\\n    constructor(StethEthFeed _stethEthFeed, IFeed _ethFeed) public {\\n        stethEthFeed = _stethEthFeed;\\n        ethFeed = _ethFeed;\\n    }\\n\\n    function decimals() public view returns(uint8) {\\n        return 18;\\n    }\\n\\n    function latestAnswer() public view returns (uint) {\\n        (uint stethEthPrice, bool isSafe) = stethEthFeed.current_price();\\n        require(isSafe, \\\"price is not safe\\\");\\n        return stethEthPrice\\n            .mul(ethFeed.latestAnswer())\\n            .div(10**uint256(ethFeed.decimals()));\\n    }\\n\\n}\",\"keccak256\":\"0xb9483c09a2b41c87e1e84185cc2d6b1b83740220acdf5d45127b0f97a5862769\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506040516104b93803806104b98339818101604052604081101561003357600080fd5b508051602090910151600080546001600160a01b039384166001600160a01b0319918216179091556001805493909216921691909117905561043f8061007a6000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063313ce5671461005157806350d25bcd1461006f57806355899b77146100895780635e19d05c146100ad575b600080fd5b6100596100b5565b6040805160ff9092168252519081900360200190f35b6100776100ba565b60408051918252519081900360200190f35b61009161028a565b604080516001600160a01b039092168252519081900360200190f35b610091610299565b601290565b600080546040805163ab2b313760e01b81528151849384936001600160a01b039091169263ab2b31379260048083019392829003018186803b1580156100ff57600080fd5b505afa158015610113573d6000803e3d6000fd5b505050506040513d604081101561012957600080fd5b50805160209091015190925090508061017d576040805162461bcd60e51b81526020600482015260116024820152707072696365206973206e6f74207361666560781b604482015290519081900360640190fd5b6001546040805163313ce56760e01b81529051610283926001600160a01b03169163313ce567916004808301926020929190829003018186803b1580156101c357600080fd5b505afa1580156101d7573d6000803e3d6000fd5b505050506040513d60208110156101ed57600080fd5b5051600154604080516350d25bcd60e01b8152905160ff909316600a0a92610277926001600160a01b0316916350d25bcd916004808301926020929190829003018186803b15801561023e57600080fd5b505afa158015610252573d6000803e3d6000fd5b505050506040513d602081101561026857600080fd5b5051859063ffffffff6102a816565b9063ffffffff61030a16565b9250505090565b6000546001600160a01b031681565b6001546001600160a01b031681565b6000826102b757506000610304565b828202828482816102c457fe5b04146103015760405162461bcd60e51b81526004018080602001828103825260218152602001806103ea6021913960400191505060405180910390fd5b90505b92915050565b600061030183836040518060400160405280601a81526020017f536166654d6174683a206469766973696f6e206279207a65726f000000000000815250600081836103d35760405162461bcd60e51b81526004018080602001828103825283818151815260200191508051906020019080838360005b83811015610398578181015183820152602001610380565b50505050905090810190601f1680156103c55780820380516001836020036101000a031916815260200191505b509250505060405180910390fd5b5060008385816103df57fe5b049594505050505056fe536166654d6174683a206d756c7469706c69636174696f6e206f766572666c6f77a265627a7a723158209c06f9435f994c4111acf905b746b228fa1c3ba75ed875d38de1071c768a43ff64736f6c63430005100032",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063313ce5671461005157806350d25bcd1461006f57806355899b77146100895780635e19d05c146100ad575b600080fd5b6100596100b5565b6040805160ff9092168252519081900360200190f35b6100776100ba565b60408051918252519081900360200190f35b61009161028a565b604080516001600160a01b039092168252519081900360200190f35b610091610299565b601290565b600080546040805163ab2b313760e01b81528151849384936001600160a01b039091169263ab2b31379260048083019392829003018186803b1580156100ff57600080fd5b505afa158015610113573d6000803e3d6000fd5b505050506040513d604081101561012957600080fd5b50805160209091015190925090508061017d576040805162461bcd60e51b81526020600482015260116024820152707072696365206973206e6f74207361666560781b604482015290519081900360640190fd5b6001546040805163313ce56760e01b81529051610283926001600160a01b03169163313ce567916004808301926020929190829003018186803b1580156101c357600080fd5b505afa1580156101d7573d6000803e3d6000fd5b505050506040513d60208110156101ed57600080fd5b5051600154604080516350d25bcd60e01b8152905160ff909316600a0a92610277926001600160a01b0316916350d25bcd916004808301926020929190829003018186803b15801561023e57600080fd5b505afa158015610252573d6000803e3d6000fd5b505050506040513d602081101561026857600080fd5b5051859063ffffffff6102a816565b9063ffffffff61030a16565b9250505090565b6000546001600160a01b031681565b6001546001600160a01b031681565b6000826102b757506000610304565b828202828482816102c457fe5b04146103015760405162461bcd60e51b81526004018080602001828103825260218152602001806103ea6021913960400191505060405180910390fd5b90505b92915050565b600061030183836040518060400160405280601a81526020017f536166654d6174683a206469766973696f6e206279207a65726f000000000000815250600081836103d35760405162461bcd60e51b81526004018080602001828103825283818151815260200191508051906020019080838360005b83811015610398578181015183820152602001610380565b50505050905090810190601f1680156103c55780820380516001836020036101000a031916815260200191505b509250505060405180910390fd5b5060008385816103df57fe5b049594505050505056fe536166654d6174683a206d756c7469706c69636174696f6e206f766572666c6f77a265627a7a723158209c06f9435f994c4111acf905b746b228fa1c3ba75ed875d38de1071c768a43ff64736f6c63430005100032",
+  "devdoc": {
+    "methods": {}
+  },
+  "userdoc": {
+    "methods": {}
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 36826,
+        "contract": "contracts/StethFeed.sol:StethFeed",
+        "label": "stethEthFeed",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(StethEthFeed)36819"
+      },
+      {
+        "astId": 36828,
+        "contract": "contracts/StethFeed.sol:StethFeed",
+        "label": "ethFeed",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_contract(IFeed)36811"
+      }
+    ],
+    "types": {
+      "t_contract(IFeed)36811": {
+        "encoding": "inplace",
+        "label": "contract IFeed",
+        "numberOfBytes": "20"
+      },
+      "t_contract(StethEthFeed)36819": {
+        "encoding": "inplace",
+        "label": "contract StethEthFeed",
+        "numberOfBytes": "20"
+      }
+    }
+  }
+}
