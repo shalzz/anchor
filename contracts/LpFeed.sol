@@ -23,12 +23,12 @@ interface Feed {
 
 contract LpFeed is Feed, Exponential {
 
-    address public pair;
+    IUniswapV2Pair public pair;
     Feed public feed0;
     Feed public feed1;
     uint8 public decimals;
 
-    constructor (address _pair, Feed _feed0, Feed _feed1, uint8 _decimals) public {
+    constructor (IUniswapV2Pair _pair, Feed _feed0, Feed _feed1, uint8 _decimals) public {
         pair = _pair;
         feed0 = _feed0;
         feed1 = _feed1;
@@ -36,8 +36,8 @@ contract LpFeed is Feed, Exponential {
     }
 
     function latestAnswer() public view returns (uint) {
-        uint totalSupply = IUniswapV2Pair(pair).totalSupply();
-        (uint r0, uint r1, ) = IUniswapV2Pair(pair).getReserves();
+        uint totalSupply = pair.totalSupply();
+        (uint r0, uint r1, ) = pair.getReserves();
         uint sqrtR = sqrt(mul_(r0, r1));
         uint p0 = feed0.latestAnswer();
         uint p1 = feed1.latestAnswer();
