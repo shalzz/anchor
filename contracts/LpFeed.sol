@@ -26,21 +26,22 @@ contract LpFeed is Feed, Exponential {
     IUniswapV2Pair public pair;
     Feed public feed0;
     Feed public feed1;
-    uint8 public decimals;
+    uint8 public constant decimals = 18;
 
-    constructor (IUniswapV2Pair _pair, Feed _feed0, Feed _feed1, uint8 _decimals) public {
+    constructor (IUniswapV2Pair _pair, Feed _feed0, Feed _feed1) public {
+        require(_feed0.decimals() <= 18, "INVALID FEED 0 DECIMALS");
+        require(_feed1.decimals() <= 18, "INVALID FEED 1 DECIMALS");
         pair = _pair;
         feed0 = _feed0;
         feed1 = _feed1;
-        decimals = _decimals;
     }
 
     function latestAnswer() public view returns (uint) {
         uint totalSupply = pair.totalSupply();
         (uint r0, uint r1, ) = pair.getReserves();
         uint sqrtR = sqrt(mul_(r0, r1));
-        uint p0 = feed0.latestAnswer();
-        uint p1 = feed1.latestAnswer();
+        uint p0 = feed0.decimals() == 18? feed0.latestAnswer(): feed0.latestAnswer() * 10 ** (18 - uint(feed0.decimals()));
+        uint p1 = feed1.decimals() == 18? feed1.latestAnswer(): feed1.latestAnswer() * 10 ** (18 - uint(feed1.decimals()));
         uint sqrtP = sqrt(mul_(p0, p1));
         return div_(mul_(2, mul_(sqrtR, sqrtP)), totalSupply);
     }

@@ -11,7 +11,6 @@ module.exports = async ({
     const pair = prompt('Pair address: ');
     const feed0 = prompt('Feed 0 address: ');
     const feed1 = prompt('Feed 1 address: ');
-    const decimals = prompt('decimals: ');
     const name = prompt('Pair name (for local storage): ');
 
     await deploy('LpFeed', {
@@ -19,8 +18,7 @@ module.exports = async ({
       args:[
         pair,
         feed0,
-        feed1,
-        decimals
+        feed1
       ]
     });
 
