@@ -1,0 +1,66 @@
+{
+  "address": "0xF45C5Ef54e1401569325E047f2FEa7190e055A18",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "latestAnswer",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x514ab152a7dc64b20c5b6965326156c8faec857b0d4ff46193a288643ded9c23",
+  "receipt": {
+    "to": null,
+    "from": "0x3FcB35a1CbFB6007f9BC638D388958Bc4550cB28",
+    "contractAddress": "0xF45C5Ef54e1401569325E047f2FEa7190e055A18",
+    "transactionIndex": 337,
+    "gasUsed": "91667",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x94350b8d3c8da706bb0db7f97777eb6903fc19eeeff4edf050591bf717c55d83",
+    "transactionHash": "0x514ab152a7dc64b20c5b6965326156c8faec857b0d4ff46193a288643ded9c23",
+    "logs": [],
+    "blockNumber": 13173543,
+    "cumulativeGasUsed": "29869360",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "5b141f94a7d99083338b4d098bf0ef23",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.16+commit.9c3226ce\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"latestAnswer\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"contracts/DolaFeed.sol\":\"DolaFeed\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/DolaFeed.sol\":{\"content\":\"pragma solidity ^0.5.16;\\n\\ninterface IFeed {\\n    function decimals() external view returns (uint8);\\n    function latestAnswer() external view returns (uint);\\n}\\n\\ncontract DolaFeed is IFeed {\\n\\n    function decimals() public view returns(uint8) {\\n        return 18;\\n    }\\n\\n    function latestAnswer() public view returns (uint) {\\n        return 1 ether;\\n    }\\n\\n}\",\"keccak256\":\"0x10bad2690827417baf04354a9a218262fa1dba83f60265ba140cbc43359cb2df\"}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b5060b18061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063313ce56714603757806350d25bcd146053575b600080fd5b603d606b565b6040805160ff9092168252519081900360200190f35b60596070565b60408051918252519081900360200190f35b601290565b670de0b6b3a76400009056fea265627a7a72315820b8909dd45b9db4bfbedb95f8cefb3fa8bcbb173e760288cf53c03a58e688f20164736f6c63430005100032",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060325760003560e01c8063313ce56714603757806350d25bcd146053575b600080fd5b603d606b565b6040805160ff9092168252519081900360200190f35b60596070565b60408051918252519081900360200190f35b601290565b670de0b6b3a76400009056fea265627a7a72315820b8909dd45b9db4bfbedb95f8cefb3fa8bcbb173e760288cf53c03a58e688f20164736f6c63430005100032",
+  "devdoc": {
+    "methods": {}
+  },
+  "userdoc": {
+    "methods": {}
+  },
+  "storageLayout": {
+    "storage": [],
+    "types": null
+  }
+}
