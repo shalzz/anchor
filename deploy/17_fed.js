@@ -1,3 +1,5 @@
+var prompt = require('prompt-sync')();
+
 module.exports = async ({
     deployments,
     getNamedAccounts
@@ -5,15 +7,15 @@ module.exports = async ({
     console.log("17. Deploy Fed")
     const {deploy} = deployments;
     const {deployer} = await getNamedAccounts();
+    const market = prompt('Dola market address: ');
 
     await deploy('Fed', {
       from: deployer,
       args:[
-        (await deployments.get('anDola')).address,
+        market,
         deployer
       ]
     });
   };
 
   module.exports.tags = ['Fed'];
-  module.exports.dependencies = ['anDola'];
