@@ -9,7 +9,7 @@ module.exports = async ({
 
     const Unitroller = await deployments.get('Unitroller');
     const Model = await deployments.get('DolaInterestRateModel');
-    const {deployer} = await getNamedAccounts();
+    const {deployer, gov} = await getNamedAccounts();
 
     const name = prompt('Market name: ');
     const symbol = prompt('Market symbol: ');
@@ -26,7 +26,7 @@ module.exports = async ({
         name,
         symbol,
         "8",
-        deployer
+        gov
       ]
     });
     const market = await deployments.get('CErc20Immutable');
