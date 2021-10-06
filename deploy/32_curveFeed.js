@@ -4,22 +4,23 @@ module.exports = async ({
     deployments,
     getNamedAccounts
   }) => {
-    console.log("17. Deploy Fed")
+    console.log("32. Deploy Curve Feed")
     const {deploy, save} = deployments;
     const {deployer} = await getNamedAccounts();
-    const market = prompt('Dola market address: ');
-    const name = prompt('Fed name (for local storage): ');
 
-    await deploy('Fed', {
+    const pool = prompt('Pool address: ');
+    const name = prompt('Pool name (for local storage): ');
+
+    await deploy('CurveFeed', {
       from: deployer,
       args:[
-        market,
-        deployer
+        pool
       ]
     });
 
-    const contract = await deployments.get('Fed');
+    const contract = await deployments.get('CurveFeed');
     await save(name, contract);
+
   };
 
-  module.exports.tags = ['Fed'];
+  module.exports.tags = ['CurveFeed'];

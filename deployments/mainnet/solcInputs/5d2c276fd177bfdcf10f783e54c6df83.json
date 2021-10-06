@@ -1,0 +1,87 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/CurveFeed.sol": {
+      "content": "pragma solidity ^0.5.16;\n\ninterface ICurvePool {\n    function get_virtual_price() external view returns (uint256);\n}\n\ninterface Feed {\n    function decimals() external view returns (uint8);\n    function latestAnswer() external view returns (uint);\n}\n\ncontract CurveFeed is Feed {\n\n    ICurvePool public pool;\n    uint8 public constant decimals = 18;\n\n    constructor (ICurvePool _pool) public {\n        pool = _pool;\n    }\n\n    function latestAnswer() public view returns (uint) {\n        return pool.get_virtual_price();\n    }\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout",
+          "storageLayout"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

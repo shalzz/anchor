@@ -5,7 +5,8 @@ const Table = require('cli-table');
 
 (async () => {
     try {
-    const comptrollerDeployment = await deployments.get("Comptroller")
+    let comptrollerDeployment = await deployments.get("Comptroller")
+    comptrollerDeployment.address = (await deployments.get("Unitroller")).address
     const provider = new Multicall.providers.MulticallProvider(ethers.provider, {batchSize:1000000})
     const comptroller = new ethers.Contract(comptrollerDeployment.address, comptrollerDeployment.abi, provider)
     const filter = comptroller.filters.MarketEntered();
@@ -19,6 +20,7 @@ const Table = require('cli-table');
     let positions = accounts.map((v,i) => [v, accountsLiquidity[i][1], accountsLiquidity[i][2], accountsLiquidity[i][2].gt(0)])
     positions = positions.filter((v) => v[1].gt(0) || v[2].gt(0))
     positions = positions.map(v => [v[0], ethers.utils.formatEther(v[1]), ethers.utils.formatEther(v[2]), v[3]])
+    positions = positions.sort((a, b) => Number(b[1]) - Number(a[1]));
     positionTable.push(...positions)
 
     console.log("Positions:")
