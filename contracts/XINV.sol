@@ -396,7 +396,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         emit Transfer(address(this), minter, vars.mintTokens);
 
         /* we move delegates */
-        _moveDelegates(address(0), minter, uint96(vars.mintTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
+        _moveDelegates(address(0), delegates[minter], uint96(vars.mintTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
         comptroller.mintVerify(address(this), minter, vars.actualMintAmount, vars.mintTokens);
@@ -537,7 +537,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         emit Redeem(redeemer, vars.redeemAmount, vars.redeemTokens);
 
         /* We move delegates */
-        _moveDelegates(redeemer, address(0), uint96(vars.redeemTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
+        _moveDelegates(delegates[redeemer], address(0), uint96(vars.redeemTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
         comptroller.redeemVerify(address(this), redeemer, vars.redeemAmount, vars.redeemTokens);
@@ -611,7 +611,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         emit Transfer(borrower, liquidator, seizeTokens);
 
         /* We move delegates to liquidator although they'll be burned in the redeemFresh call after */
-        _moveDelegates(borrower, liquidator, uint96(seizeTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
+        _moveDelegates(delegates[borrower], delegates[liquidator], uint96(seizeTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
         comptroller.seizeVerify(address(this), seizerToken, liquidator, borrower, seizeTokens);
