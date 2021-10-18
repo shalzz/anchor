@@ -12,13 +12,26 @@ require('@eth-optimism/smock/build/src/plugins/hardhat-storagelayout')
  */
 module.exports = {
   solidity: {
-    version: "0.5.16",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200
+    compilers: [
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+      {
+        version: "0.8.9",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
       }
-    }
+    ]
   },
   networks:{
     hardhat: {},
