@@ -33,9 +33,9 @@ contract xChainFed {
         chair = newChair_;
     }
 
-    function sweep(ERC20 token) public onlyChair {
+    function sweep(ERC20 token, address to) public onlyChair {
         require(token != SRC_DOLA && token != DST_DOLA && token != ERC20(address(DST_MARKET)), "cannot steal DOLA");
-        token.transfer(msg.sender, token.balanceOf(address(this)));
+        token.transfer(to, token.balanceOf(address(this)));
     }
 
     // Source side (Ethereum)
