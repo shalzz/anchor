@@ -64,35 +64,68 @@ contract xChainFed {
     
     ERC20 public constant DST_DOLA = ERC20(0x3129662808bEC728a27Ab6a6b9AFd3cBacA8A43c);
     CErc20 public constant DST_MARKET = CErc20(0x5A3B9Dcdd462f264eC1bD56D618BF4552C2EaF8A);
+    address public dstBoard;
     uint public dstSupply;
+    uint public dstLastSuspendTimestamp;
+    uint constant SUSPENSION_DURATION = 2 weeks;
+    uint constant DUST = 10000 ether; // 10000 DOLA minimum sent across the bridge
 
     modifier onlyDst {
         require(block.chainid != 1, "WRONG CHAIN");
         _;
     }
+
+    function dstSetBoard(address newBoard) public onlyDst {
+        if(dstBoard == address(0)) {
+            require(msg.sender == chair, "ONLY CHAIR CAN SET BOARD FOR THE FIRST TIME");
+        } else {
+            require(msg.sender == dstBoard, "ONLY BOARD CAN CHANGE ITS OWN ADDRESS");
+        }
+        dstBoard = newBoard;
+    }
+
+    function dstIsChairSuspended() public view onlyDst returns (bool) {
+        return dstLastSuspendTimestamp + SUSPENSION_DURATION > block.timestamp;
+    }
+
+    function dstSuspendChair() public onlyDst {
+        require(msg.sender == dstBoard, "ONLY BOARD CAN SUSPEND CHAIR");
+        require(!dstIsChairSuspended(), "CHAIR ALREADY SUSPENDED");
+        dstLastSuspendTimestamp = block.timestamp;
+    }
     
-    function dstTransferReservesToSrc(uint amount) public onlyChair onlyDst {
+    function dstUnsuspendChair() public onlyDst {
+        require(msg.sender == dstBoard, "ONLY BOARD CAN UNSUSPEND CHAIR");
+        require(dstIsChairSuspended(), "CHAIR NOT SUSPENDED");
+        dstLastSuspendTimestamp = 0;
+    }
+
+    function dstTransferReservesToSrc(uint amount) public onlyDst {
+        require(msg.sender == chair || msg.sender == dstBoard, "Only chair or board can transfer reserves to source");
+        require(amount >= DUST);
         require(DST_DOLA.Swapout(amount, address(this)));
     }
 
     function dstExpansion(uint amount) public onlyChair onlyDst {
+        require(!dstIsChairSuspended(), "Chair is suspended");
         DST_DOLA.approve(address(DST_MARKET), amount);
         require(DST_MARKET.mint(amount) == 0, 'Supplying failed');
         dstSupply = dstSupply + amount;
         emit Expansion(amount);
     }
 
-    function dstContraction(uint amount) public onlyChair onlyDst {
+    function dstContraction(uint amount) public onlyDst {
+        require(msg.sender == chair || msg.sender == dstBoard, "Only chair or board can call contraction");
         require(amount <= dstSupply, "AMOUNT TOO BIG"); // can't burn profits
         require(DST_MARKET.redeemUnderlying(amount) == 0, "Redeem failed");
         dstSupply = dstSupply - amount;
         emit Contraction(amount);
     }
 
-    function dstSendProfitToGov() public onlyChair onlyDst {
+    function dstSendProfitToGov() public onlyDst {
         uint underlyingBalance = DST_MARKET.balanceOfUnderlying(address(this));
         uint profit = underlyingBalance - dstSupply;
-        if(profit > 0) {
+        if(profit >= DUST) {
             require(DST_MARKET.redeemUnderlying(profit) == 0, "Redeem failed");
             require(DST_DOLA.Swapout(profit, GOV));
         }
