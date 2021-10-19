@@ -125,10 +125,9 @@ contract xChainFed {
     function dstSendProfitToGov() public onlyDst {
         uint underlyingBalance = DST_MARKET.balanceOfUnderlying(address(this));
         uint profit = underlyingBalance - dstSupply;
-        if(profit >= DUST) {
-            require(DST_MARKET.redeemUnderlying(profit) == 0, "Redeem failed");
-            require(DST_DOLA.Swapout(profit, GOV));
-        }
+        require(profit >= DUST, "Not enough profit");
+        require(DST_MARKET.redeemUnderlying(profit) == 0, "Redeem failed");
+        require(DST_DOLA.Swapout(profit, GOV));
     }
 
     event Expansion(uint amount);
