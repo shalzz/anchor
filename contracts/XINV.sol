@@ -73,6 +73,8 @@ contract xInvCore is Exponential, TokenErrorReporter {
 
     address public rewardTreasury;
 
+    uint public constant borrowIndex = 1 ether; // for compatibility with Comptroller
+
     /**
      * @notice Official record of token balances for each account
      */
