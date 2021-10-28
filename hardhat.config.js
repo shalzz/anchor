@@ -43,6 +43,10 @@ module.exports = {
       url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
       accounts: [process.env.MAINNET_PRIVKEY]
     },
+    fantom:{
+      url: "https://rpc.ftm.tools/",
+      accounts: [process.env.MAINNET_PRIVKEY]
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
