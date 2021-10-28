@@ -28,8 +28,7 @@ contract xChainFed {
         _;
     }
 
-    function changeChair(address newChair_) public {
-        require(msg.sender == chair || msg.sender == GOV, "ONLY CHAIN OR GOV");
+    function changeChair(address newChair_) public onlyChair {
         chair = newChair_;
     }
 
@@ -68,7 +67,7 @@ contract xChainFed {
     uint public dstSupply;
     uint public dstLastSuspendTimestamp;
     uint constant SUSPENSION_DURATION = 2 weeks;
-    uint constant DUST = 10000 ether; // 10000 DOLA minimum sent across the bridge
+    uint constant DUST = 5000 ether; // 5000 DOLA minimum sent across the bridge
 
     modifier onlyDst {
         require(block.chainid != 1, "WRONG CHAIN");
