@@ -16,7 +16,7 @@ module.exports = async ({
       args:[
           inv, // inverse as underlying
           comptroller.address,
-          "8000000000000000", // reward per block
+          "6600000000000000", // reward per block
           gov,
           name,
           symbol,

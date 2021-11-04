@@ -2,7 +2,6 @@ require("@nomiclabs/hardhat-waffle");
 require('@nomiclabs/hardhat-etherscan')
 require('hardhat-deploy')
 require('dotenv').config()
-require('@eth-optimism/smock/build/src/plugins/hardhat-storagelayout')
 
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more

@@ -35,11 +35,6 @@ contract xInvCore is Exponential, TokenErrorReporter {
     uint8 public decimals;
 
     /**
-     * @notice Maximum fraction of interest that can be set aside for reserves
-     */
-    uint internal constant reserveFactorMaxMantissa = 1e18;
-
-    /**
      * @notice Administrator for this contract
      */
     address payable public admin;
@@ -72,6 +67,8 @@ contract xInvCore is Exponential, TokenErrorReporter {
     uint public rewardPerBlock;
 
     address public rewardTreasury;
+
+    uint public constant borrowIndex = 1 ether; // for compatibility with Comptroller
 
     /**
      * @notice Official record of token balances for each account
@@ -396,7 +393,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         emit Transfer(address(this), minter, vars.mintTokens);
 
         /* we move delegates */
-        _moveDelegates(address(0), minter, uint96(vars.mintTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
+        _moveDelegates(address(0), delegates[minter], uint96(vars.mintTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
         comptroller.mintVerify(address(this), minter, vars.actualMintAmount, vars.mintTokens);
@@ -537,7 +534,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         emit Redeem(redeemer, vars.redeemAmount, vars.redeemTokens);
 
         /* We move delegates */
-        _moveDelegates(redeemer, address(0), uint96(vars.redeemTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
+        _moveDelegates(delegates[redeemer], address(0), uint96(vars.redeemTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
         comptroller.redeemVerify(address(this), redeemer, vars.redeemAmount, vars.redeemTokens);
@@ -611,7 +608,7 @@ contract xInvCore is Exponential, TokenErrorReporter {
         emit Transfer(borrower, liquidator, seizeTokens);
 
         /* We move delegates to liquidator although they'll be burned in the redeemFresh call after */
-        _moveDelegates(borrower, liquidator, uint96(seizeTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
+        _moveDelegates(delegates[borrower], delegates[liquidator], uint96(seizeTokens)); // NOTE: Check for potential overflows due to conversion from uint256 to uint96
 
         /* We call the defense hook */
         comptroller.seizeVerify(address(this), seizerToken, liquidator, borrower, seizeTokens);
@@ -779,48 +776,11 @@ contract xInvCore is Exponential, TokenErrorReporter {
     /// @notice The number of checkpoints for each account
     mapping (address => uint32) public numCheckpoints;
 
-    /// @notice The EIP-712 typehash for the contract's domain
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
-
-    /// @notice The EIP-712 typehash for the delegation struct used by the contract
-    bytes32 public constant DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
-
-    /// @notice A record of states for signing / validating signatures
-    mapping (address => uint) public nonces;
-
     /// @notice An event thats emitted when an account changes its delegate
     event DelegateChanged(address indexed delegator, address indexed fromDelegate, address indexed toDelegate);
 
     /// @notice An event thats emitted when a delegate account's vote balance changes
     event DelegateVotesChanged(address indexed delegate, uint previousBalance, uint newBalance);
-
-    /**
-     * @notice Delegate votes from `msg.sender` to `delegatee`
-     * @param delegatee The address to delegate votes to
-     */
-    function delegate(address delegatee) public {
-        return _delegate(msg.sender, delegatee);
-    }
-
-    /**
-     * @notice Delegates votes from signatory to `delegatee`
-     * @param delegatee The address to delegate votes to
-     * @param nonce The contract state required to match the signature
-     * @param expiry The time at which to expire the signature
-     * @param v The recovery byte of the signature
-     * @param r Half of the ECDSA signature pair
-     * @param s Half of the ECDSA signature pair
-     */
-    function delegateBySig(address delegatee, uint nonce, uint expiry, uint8 v, bytes32 r, bytes32 s) public {
-        bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(name)), getChainId(), address(this)));
-        bytes32 structHash = keccak256(abi.encode(DELEGATION_TYPEHASH, delegatee, nonce, expiry));
-        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-        address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), "INV::delegateBySig: invalid signature");
-        require(nonce == nonces[signatory]++, "INV::delegateBySig: invalid nonce");
-        require(now <= expiry, "INV::delegateBySig: signature expired");
-        return _delegate(signatory, delegatee);
-    }
 
     /**
      * @notice Gets the current votes balance for `account`
@@ -914,12 +874,6 @@ contract xInvCore is Exponential, TokenErrorReporter {
       emit DelegateVotesChanged(delegatee, oldVotes, newVotes);
     }
 
-    function getChainId() internal pure returns (uint) {
-        uint256 chainId;
-        assembly { chainId := chainid() }
-        return chainId;
-    }
-
     function safe32(uint n, string memory errorMessage) internal pure returns (uint32) {
         require(n < 2**32, errorMessage);
         return uint32(n);
@@ -943,7 +897,7 @@ contract TimelockEscrow {
     address public underlying;
     address public governance;
     address public market;
-    uint public duration = 14 days;
+    uint public duration = 10 days;
     mapping (address => EscrowData) public pendingWithdrawals;
 
     struct EscrowData {
@@ -1057,6 +1011,15 @@ contract XINV is xInvCore {
     /*** User Interface ***/
 
     /**
+     * @notice Sync user delegate from INV
+     * @param user Address to sync
+     */
+    function syncDelegate(address user) public {
+        address invDelegate = IINV(underlying).delegates(user);
+        _delegate(user, invDelegate);
+    }
+
+    /**
      * @notice Sender supplies assets into the market and receives cTokens in exchange
      * @param mintAmount The amount of the underlying asset to supply
      * @return uint 0=success, otherwise a failure (see ErrorReporter.sol for details)
@@ -1064,12 +1027,10 @@ contract XINV is xInvCore {
     function mint(uint mintAmount) external returns (uint) {
         (uint err,) = mintInternal(mintAmount);
         
-        /* if user has no delegate, we inherit delegate from INV */
-        if(delegates[msg.sender] == address(0)) {
-            address invDelegate = IINV(underlying).delegates(msg.sender);
-            if(invDelegate != address(0)) {
-                _delegate(msg.sender, invDelegate);
-            }
+        /* we inherit delegate from INV */
+        address invDelegate = IINV(underlying).delegates(msg.sender);
+        if(delegates[msg.sender] != invDelegate) {
+            _delegate(msg.sender, invDelegate);
         }
         return err;
     }
