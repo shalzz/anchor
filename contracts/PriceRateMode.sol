@@ -32,6 +32,11 @@ contract PriceRateModel {
     uint public baseRatePerBlock;
 
     /**
+     * @notice Timestamp of when the rate was lastUpdated.
+     */
+    uint public lastInteraction;
+
+    /**
      * @notice The current interest rate
      */
     uint public currentRatePerBlock;
@@ -61,6 +66,7 @@ contract PriceRateModel {
     ) internal {
         baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
         currentRatePerBlock = baseRatePerBlock;
+        lastInteraction = block.timestamp;
 
         negativeDepegThreshold = negativeDepegThreshold_;
         positiveDepegThreshold = positiveDepegThreshold_;
@@ -83,32 +89,39 @@ contract PriceRateModel {
 
     function updateRate() external {
         uint price = priceFeed.latestAnswer();
+        uint newRate;
 
         if (price < negativeDepegThreshold ) {
-            currentRatePerBlock = currentRatePerBlock.add(rateStep);
-            if (currentRatePerBlock > maxRate) {
-                currentRatePerBlock = maxRate;
-            }
+            newRate = increaseRateToLimit(maxRate);
         } else if (price > positiveDepegThreshold) {
-            currentRatePerBlock = currentRatePerBlock.sub(rateStep);
-            if (currentRatePerBlock < minRate) {
-                currentRatePerBlock = minRate;
-            }
+            newRate = decreaseRateToLimit(minRate);
         } else if (currentRatePerBlock != baseRatePerBlock) {
             if (currentRatePerBlock < baseRatePerBlock) {
-                currentRatePerBlock = currentRatePerBlock.add(rateStep);
-                if (currentRatePerBlock > baseRatePerBlock) {
-                    currentRatePerBlock = baseRatePerBlock;
-                }
+                newRate = increaseRateToLimit(baseRatePerBlock);
             } else if (currentRatePerBlock > baseRatePerBlock) {
-                currentRatePerBlock = currentRatePerBlock.sub(rateStep);
-                if (currentRatePerBlock < baseRatePerBlock) {
-                    currentRatePerBlock = baseRatePerBlock;
-                }
+                newRate = decreaseRateToLimit(baseRatePerBlock);
             }
         }
 
-        emit NewInterestParams(currentRatePerBlock);
+        if (newRate != currentRatePerBlock) {
+            currentRatePerBlock = newRate;
+            lastInteraction = block.timestamp;
+            emit NewInterestParams(currentRatePerBlock, lastInteraction);
+        }
+    }
+
+    function increaseRateToLimit(uint limit) internal view returns (uint rate) {
+        rate = currentRatePerBlock.add(rateStep);
+        if (rate > limit) {
+            rate = limit;
+        }
+    }
+
+    function decreaseRateToLimit(uint limit) internal view returns (uint rate) {
+        rate = currentRatePerBlock.sub(rateStep);
+        if (rate < limit) {
+            rate = limit;
+        }
     }
 
     /**
