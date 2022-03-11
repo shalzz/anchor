@@ -46,6 +46,7 @@ contract PriceRateModel {
     uint public maxRate;
     uint public minRate;
     uint public rateStep;
+    uint public updateRateInterval;
 
     IFeed priceFeed;
 
@@ -61,6 +62,7 @@ contract PriceRateModel {
         uint maxRate_,
         uint minRate_,
         uint rateStep_,
+        uint updateRateInterval_,
         IFeed priceFeed_,
         address owner_
     ) internal {
@@ -73,6 +75,7 @@ contract PriceRateModel {
         maxRate = maxRate_;
         minRate = minRate_;
         rateStep = rateStep_;
+        updateRateInterval = updateRateInterval_;
         priceFeed = priceFeed_;
         owner = owner_;
     }
@@ -87,9 +90,15 @@ contract PriceRateModel {
         baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
     }
 
-    function updateRate() external {
+    function updateRate() external returns (uint) {
         uint price = priceFeed.latestAnswer();
-        uint newRate;
+        uint newRate = currentRatePerBlock;
+
+        // Prevent too frequent rate updates.
+        // Save gas by exiting early since we can't revert here.
+        if ( block.timestamp < lastInteraction + updateRateInterval) {
+            return currentRatePerBlock;
+        }
 
         if (price < negativeDepegThreshold ) {
             newRate = increaseRateToLimit(maxRate);
@@ -105,9 +114,10 @@ contract PriceRateModel {
 
         if (newRate != currentRatePerBlock) {
             currentRatePerBlock = newRate;
-            lastInteraction = block.timestamp;
             emit NewInterestParams(currentRatePerBlock, lastInteraction);
+            lastInteraction = block.timestamp; // This should be set irrespective of rate change?
         }
+        return currentRatePerBlock;
     }
 
     function increaseRateToLimit(uint limit) internal view returns (uint rate) {
