@@ -2,6 +2,11 @@ pragma solidity ^0.5.16;
 
 import "./SafeMath.sol";
 
+interface IFeed {
+    function decimals() external view returns (uint8);
+    function latestAnswer() external view returns (uint);
+}
+
 /**
   * @title DOLA's price base InterestRateModel.
   * @author @shalzz
@@ -22,19 +27,48 @@ contract PriceRateModel {
     uint public constant blocksPerYear = 2102400;
 
     /**
-     * @notice The base interest rate which is the y-intercept when utilization rate is 0
+     * @notice The base interest rate to target
      */
     uint public baseRatePerBlock;
+
+    /**
+     * @notice The current interest rate
+     */
+    uint public currentRatePerBlock;
+
+    uint public negativeDepegThreshold;
+    uint public positiveDepegThreshold;
+    uint public maxRate;
+    uint public minRate;
+    uint public rateStep;
+
+    IFeed priceFeed;
 
     /**
      * @notice Construct an interest rate model
      * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by 1e18)
      * @param owner_ The address of the owner, i.e. the Timelock contract (which has the ability to update parameters directly)
      */
-    constructor(uint baseRatePerYear, address owner_) internal {
-        owner = owner_;
+    constructor(
+        uint baseRatePerYear,
+        uint negativeDepegThreshold_,
+        uint positiveDepegThreshold_,
+        uint maxRate_,
+        uint minRate_,
+        uint rateStep_,
+        IFeed priceFeed_,
+        address owner_
+    ) internal {
+        baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
+        currentRatePerBlock = baseRatePerBlock;
 
-        updateBaseRateModelInternal(baseRatePerYear);
+        negativeDepegThreshold = negativeDepegThreshold_;
+        positiveDepegThreshold = positiveDepegThreshold_;
+        maxRate = maxRate_;
+        minRate = minRate_;
+        rateStep = rateStep_;
+        priceFeed = priceFeed_;
+        owner = owner_;
     }
 
     /**
@@ -44,7 +78,37 @@ contract PriceRateModel {
     function setBaseRate(uint baseRatePerYear) external {
         require(msg.sender == owner, "only the owner may call this function.");
 
-        updateBaseRateModelInternal(baseRatePerYear);
+        baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
+    }
+
+    function updateRate() external {
+        uint price = priceFeed.latestAnswer();
+
+        if (price < negativeDepegThreshold ) {
+            currentRatePerBlock = currentRatePerBlock.add(rateStep);
+            if (currentRatePerBlock > maxRate) {
+                currentRatePerBlock = maxRate;
+            }
+        } else if (price > positiveDepegThreshold) {
+            currentRatePerBlock = currentRatePerBlock.sub(rateStep);
+            if (currentRatePerBlock < minRate) {
+                currentRatePerBlock = minRate;
+            }
+        } else if (currentRatePerBlock != baseRatePerBlock) {
+            if (currentRatePerBlock < baseRatePerBlock) {
+                currentRatePerBlock = currentRatePerBlock.add(rateStep);
+                if (currentRatePerBlock > baseRatePerBlock) {
+                    currentRatePerBlock = baseRatePerBlock;
+                }
+            } else if (currentRatePerBlock > baseRatePerBlock) {
+                currentRatePerBlock = currentRatePerBlock.sub(rateStep);
+                if (currentRatePerBlock < baseRatePerBlock) {
+                    currentRatePerBlock = baseRatePerBlock;
+                }
+            }
+        }
+
+        emit NewInterestParams(currentRatePerBlock);
     }
 
     /**
@@ -70,8 +134,8 @@ contract PriceRateModel {
      * @param reserves The amount of reserves in the market
      * @return The borrow rate percentage per block as a mantissa (scaled by 1e18)
      */
-    function getBorrowRate(uint cash, uint borrows, uint reserves) external view returns (uint) {
-        return baseRatePerBlock;
+    function getBorrowRateInternal(uint cash, uint borrows, uint reserves) internal view returns (uint) {
+        return currentRatePerBlock;
     }
 
     /**
@@ -84,18 +148,8 @@ contract PriceRateModel {
      */
     function getSupplyRate(uint cash, uint borrows, uint reserves, uint reserveFactorMantissa) public view returns (uint) {
         uint oneMinusReserveFactor = uint(1e18).sub(reserveFactorMantissa);
-        uint borrowRate = baseRatePerBlock;
+        uint borrowRate = getBorrowRateInternal(cash, borrows, reserves);
         uint rateToPool = borrowRate.mul(oneMinusReserveFactor).div(1e18);
         return utilizationRate(cash, borrows, reserves).mul(rateToPool).div(1e18);
-    }
-
-    /**
-     * @notice Internal function to update the parameters of the interest rate model
-     * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by 1e18)
-     */
-    function updateBaseRateModelInternal(uint baseRatePerYear) internal {
-        baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
-
-        emit NewInterestParams(baseRatePerBlock);
     }
 }
