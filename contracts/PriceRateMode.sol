@@ -1,6 +1,8 @@
 pragma solidity ^0.5.16;
 
 import "./SafeMath.sol";
+import "./CTokenInterfaces.sol";
+import "./InterestRateModel.sol";
 
 interface IFeed {
     function decimals() external view returns (uint8);
@@ -11,10 +13,10 @@ interface IFeed {
   * @title DOLA's price base InterestRateModel.
   * @author @shalzz
   */
-contract PriceRateModel {
+contract PriceRateModel is InterestRateModel {
     using SafeMath for uint;
 
-    event NewInterestParams(uint baseRatePerBlock);
+    event NewInterestParams(uint ratePerBlock, uint timestamp);
 
     /**
      * @notice The address of the owner, i.e. the Timelock contract, which can update parameters directly
@@ -49,6 +51,7 @@ contract PriceRateModel {
     uint public updateRateInterval;
 
     IFeed priceFeed;
+    CTokenInterface cToken;
 
     /**
      * @notice Construct an interest rate model
@@ -64,6 +67,7 @@ contract PriceRateModel {
         uint rateStep_,
         uint updateRateInterval_,
         IFeed priceFeed_,
+        CTokenInterface cToken_,
         address owner_
     ) internal {
         baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
@@ -77,6 +81,7 @@ contract PriceRateModel {
         rateStep = rateStep_;
         updateRateInterval = updateRateInterval_;
         priceFeed = priceFeed_;
+        cToken = cToken_;
         owner = owner_;
     }
 
@@ -88,6 +93,53 @@ contract PriceRateModel {
         require(msg.sender == owner, "only the owner may call this function.");
 
         baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
+    }
+
+    function setNegThreshold(uint negativeDepegThreshold_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        negativeDepegThreshold = negativeDepegThreshold_;
+    }
+
+    function setPosThreshold(uint positiveDepegThreshold_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        positiveDepegThreshold = positiveDepegThreshold_;
+    }
+
+    function setMaxRate(uint maxRate_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        maxRate = maxRate_;
+    }
+    function setMinRate(uint minRate_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        minRate = minRate_;
+    }
+
+    function setRateStep(uint rateStep_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        rateStep = rateStep_;
+    }
+
+    function setUpdateRateInterval(uint updateRateInterval_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        updateRateInterval = updateRateInterval_;
+    }
+
+    function setPriceFeed(IFeed priceFeed_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        priceFeed = priceFeed_;
+    }
+
+    function setCToken(CTokenInterface cToken_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        cToken = cToken_;
     }
 
     function updateRate() external returns (uint) {
@@ -114,8 +166,10 @@ contract PriceRateModel {
 
         if (newRate != currentRatePerBlock) {
             currentRatePerBlock = newRate;
-            emit NewInterestParams(currentRatePerBlock, lastInteraction);
             lastInteraction = block.timestamp; // This should be set irrespective of rate change?
+            cToken.accrueInterest();
+
+            emit NewInterestParams(currentRatePerBlock, lastInteraction);
         }
         return currentRatePerBlock;
     }
@@ -159,6 +213,17 @@ contract PriceRateModel {
      */
     function getBorrowRateInternal(uint cash, uint borrows, uint reserves) internal view returns (uint) {
         return currentRatePerBlock;
+    }
+
+    /**
+     * @notice Calculates the current borrow rate per block
+     * @param cash The amount of cash in the market
+     * @param borrows The amount of borrows in the market
+     * @param reserves The amount of reserves in the market
+     * @return The borrow rate percentage per block as a mantissa (scaled by 1e18)
+     */
+    function getBorrowRate(uint cash, uint borrows, uint reserves) external view returns (uint) {
+        return getBorrowRateInternal(cash, borrows, reserves);
     }
 
     /**
