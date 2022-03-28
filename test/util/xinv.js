@@ -35,7 +35,7 @@ const init = async () => {
     OracleArtifact = await hre.artifacts.readArtifact('Oracle');
     OracleFeedArtifact = await hre.artifacts.readArtifact('OracleFeed');
     JumpRateModelV2Artifact = await hre.artifacts.readArtifact('JumpRateModelV2');
-    ERC20Artifact = await hre.artifacts.readArtifact('ERC20');
+    ERC20Artifact = await hre.artifacts.readArtifact('contracts/ERC20.sol:ERC20');
 
     signers = await hre.ethers.getSigners();
 
