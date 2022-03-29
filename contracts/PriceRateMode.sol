@@ -3,11 +3,10 @@ pragma solidity ^0.5.16;
 import "./SafeMath.sol";
 import "./CTokenInterfaces.sol";
 import "./InterestRateModel.sol";
+import "./DolaFeed.sol";
 
-interface IFeed {
-    function decimals() external view returns (uint8);
-    function latestAnswer() external view returns (uint);
-}
+import "forge-std/console.sol";
+
 
 /**
   * @title DOLA's price base InterestRateModel.
