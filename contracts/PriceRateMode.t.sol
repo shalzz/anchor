@@ -113,15 +113,61 @@ contract PriceRateModelTest is DSTest {
     }
 
     function testUpdateRateBtwThreshold() public {
+        uint baseRate = priceModel.baseRatePerBlock();
+
+        // Increase current rate
+        vm.prank(admin);
+        priceModel.setCurrentRate(baseRate + 1);
+        priceModel.updateRate();
+        uint newRate = priceModel.getBorrowRate(0, 0, 0);
+
+        // Decrease current rate
+        vm.prank(admin);
+        priceModel.setCurrentRate(baseRate - 1);
+        vm.warp(block.timestamp + priceModel.updateRateInterval() + 1);
+        priceModel.updateRate();
+        uint newRate2 = priceModel.getBorrowRate(0, 0, 0);
+
+        assertEq(newRate, baseRate);
+        assertEq(newRate2, baseRate);
     }
 
     function testUpdateRateWithInterval() public {
+        uint rate = priceModel.getBorrowRate(0, 0, 0);
+
+        vm.mockCall(
+            address(feed),
+            abi.encodeWithSelector(feed.latestAnswer.selector),
+            abi.encode(priceModel.negativeDepegThreshold() - 1)
+        );
+        priceModel.updateRate();
+        uint newRate = priceModel.getBorrowRate(0, 0, 0);
+
+        priceModel.updateRate();
+        uint newRate2 = priceModel.getBorrowRate(0, 0, 0);
+
+        // Shouldn't update the rate again until after updateRateInterval.
+        assertTrue(rate != newRate);
+        assertEq(newRate, newRate2);
     }
 
     function testUpdateRateWithIntervalNeverReverts() public {
+        priceModel.updateRate();
+        priceModel.updateRate();
+        priceModel.updateRate();
     }
 
     function testUpdateRateCallsCToken() public {
+        vm.expectCall(
+            address(ctoken),
+            abi.encodeWithSelector(ctoken.accrueInterest.selector)
+        );
+        vm.mockCall(
+            address(feed),
+            abi.encodeWithSelector(feed.latestAnswer.selector),
+            abi.encode(priceModel.positiveDepegThreshold() + 1)
+        );
+        priceModel.updateRate();
     }
 
     function testOwnerOnlyFunctions() public {
