@@ -94,6 +94,12 @@ contract PriceRateModel is InterestRateModel {
         baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
     }
 
+    function setCurrentRate(uint currentRatePerBlock_) external {
+        require(msg.sender == owner, "only the owner may call this function.");
+
+        currentRatePerBlock = currentRatePerBlock_;
+    }
+
     function setNegThreshold(uint negativeDepegThreshold_) external {
         require(msg.sender == owner, "only the owner may call this function.");
 

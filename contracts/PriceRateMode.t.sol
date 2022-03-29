@@ -57,18 +57,59 @@ contract PriceRateModelTest is DSTest {
             abi.encode(priceModel.negativeDepegThreshold() - 1)
         );
         priceModel.updateRate();
-
         uint newRate = priceModel.getBorrowRate(0, 0, 0);
+
+        // Should only increase/decrease by rateStep
         assertEq(newRate, rate + priceModel.rateStep());
     }
 
     function testUpdateRateWithPosThreshold() public {
+        uint rate = priceModel.getBorrowRate(0, 0, 0);
+
+        vm.mockCall(
+            address(feed),
+            abi.encodeWithSelector(feed.latestAnswer.selector),
+            abi.encode(priceModel.positiveDepegThreshold() + 1)
+        );
+        priceModel.updateRate();
+        uint newRate = priceModel.getBorrowRate(0, 0, 0);
+
+        // Should only increase/decrease by rateStep
+        assertEq(newRate, rate - priceModel.rateStep());
     }
 
     function testUpdateRateWithMaxRate() public {
+        uint maxRate = priceModel.maxRate();
+        vm.prank(admin);
+        priceModel.setCurrentRate(maxRate - 1);
+
+        vm.mockCall(
+            address(feed),
+            abi.encodeWithSelector(feed.latestAnswer.selector),
+            abi.encode(priceModel.negativeDepegThreshold() - 1)
+        );
+        priceModel.updateRate();
+        uint newRate = priceModel.getBorrowRate(0, 0, 0);
+
+        // Shouldn't go beyond maxRate
+        assertEq(newRate, maxRate);
     }
 
     function testUpdateRateWithMinRate() public {
+        uint minRate = priceModel.minRate();
+        vm.prank(admin);
+        priceModel.setCurrentRate(minRate + 1);
+
+        vm.mockCall(
+            address(feed),
+            abi.encodeWithSelector(feed.latestAnswer.selector),
+            abi.encode(priceModel.positiveDepegThreshold() + 1)
+        );
+        priceModel.updateRate();
+        uint newRate = priceModel.getBorrowRate(0, 0, 0);
+
+        // Shouldn't go below minRate
+        assertEq(newRate, minRate);
     }
 
     function testUpdateRateBtwThreshold() public {
@@ -86,6 +127,7 @@ contract PriceRateModelTest is DSTest {
     function testOwnerOnlyFunctions() public {
         vm.startPrank(admin);
         priceModel.setBaseRate(1);
+        priceModel.setCurrentRate(1);
         priceModel.setNegThreshold(1);
         priceModel.setPosThreshold(1);
         priceModel.setMaxRate(1);
@@ -98,6 +140,8 @@ contract PriceRateModelTest is DSTest {
 
         vm.expectRevert("only the owner may call this function.");
         priceModel.setBaseRate(1);
+        vm.expectRevert("only the owner may call this function.");
+        priceModel.setCurrentRate(1);
         vm.expectRevert("only the owner may call this function.");
         priceModel.setNegThreshold(1);
         vm.expectRevert("only the owner may call this function.");
