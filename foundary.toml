@@ -1,0 +1,10 @@
+[default]
+src = 'contracts'
+out = 'deployments'
+libs = ['lib']
+remappings = [
+    'ds-test/=lib/ds-test/src/',
+    'forge-std/=lib/forge-std/src/'
+]
+
+# See more config options https://github.com/gakonst/foundry/tree/master/config
