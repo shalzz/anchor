@@ -69,7 +69,7 @@ contract PriceRateModel is InterestRateModel {
         IFeed priceFeed_,
         CTokenInterface cToken_,
         address owner_
-    ) internal {
+    ) public {
         baseRatePerBlock = baseRatePerYear.div(blocksPerYear);
         currentRatePerBlock = baseRatePerBlock;
         lastInteraction = block.timestamp;
